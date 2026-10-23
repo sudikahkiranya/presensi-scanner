@@ -40,8 +40,8 @@ function applyRekapEffectsPreference() {
   button.classList.toggle("effects-off", !rekapEffectsEnabled);
   button.setAttribute("aria-pressed", String(rekapEffectsEnabled));
   button.title = rekapEffectsEnabled
-    ? "Animasi rekap aktif — klik untuk mematikan"
-    : "Animasi rekap nonaktif — klik untuk mengaktifkan";
+    ? "Animasi presensi aktif"
+    : "Animasi presensi nonaktif";
 }
 
 function toggleRekapEffects() {
