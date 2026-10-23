@@ -17,7 +17,7 @@ html, body {
 
 body {
   font-family: "Inter", sans-serif;
-  background: #F3EBDD;
+  background: #FFFFFF;
   padding: 0 30px 16px;
   display: flex;
   flex-direction: column;
@@ -48,8 +48,8 @@ h1 {
 .flash-success { animation: flashGreen 0.6s; }
 .flash-error { animation: flashRed 0.6s; }
 
-@keyframes flashGreen { 0% { background: #bbf7d0; } 100% { background: #F3EBDD; } }
-@keyframes flashRed { 0% { background: #fecaca; } 100% { background: #F3EBDD; } }
+@keyframes flashGreen { 0% { background: #bbf7d0; } 100% { background: #FFFFFF; } }
+@keyframes flashRed { 0% { background: #fecaca; } 100% { background: #FFFFFF; } }
 
 @keyframes popIn { 0% { transform: scale(0); } 100% { transform: scale(1); } }
 @keyframes spin { 100% { transform: rotate(360deg); } }
@@ -202,7 +202,9 @@ h1 {
 .card {
   background: white;
   border-radius: 16px;
-  box-shadow: 0 8px 22px rgba(74, 58, 30, 0.10), 0 2px 6px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 10px 30px rgba(45, 31, 35, 0.10), 0 3px 8px rgba(45, 31, 35, 0.05);
+  border: 1px solid rgba(130, 70, 83, 0.08);
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
   padding: 24px 30px;
   box-sizing: border-box;
   position: relative;
@@ -477,7 +479,7 @@ input#nis:focus {
   grid-column: span 2;
   background: white;
   border-radius: 16px;
-  box-shadow: 0 8px 22px rgba(74, 58, 30, 0.10), 0 2px 6px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 10px 30px rgba(45, 31, 35, 0.10), 0 3px 8px rgba(45, 31, 35, 0.05);
   max-width: 500px;
   margin: 40px auto 0 auto;
   width: 100%;
@@ -682,7 +684,7 @@ body.effects-disabled .idle-container {
   padding: 12px 20px !important;
   background: #fff;
   border-radius: 16px;
-  box-shadow: 0 8px 22px rgba(74, 58, 30, 0.10), 0 2px 6px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 10px 30px rgba(45, 31, 35, 0.10), 0 3px 8px rgba(45, 31, 35, 0.05);
   box-sizing: border-box;
   display: flex; 
   flex-direction: row;
