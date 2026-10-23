@@ -60,7 +60,7 @@ h1 {
 #topHeaderBanner {
   width: 100%;
   max-width: 1280px;
-  background: #678d58;
+  background: #824653;
   border-radius: 0 0 16px 16px;
   padding: 18px 30px;
   display: flex;
@@ -252,7 +252,7 @@ h1 {
   left: 12px;
   width: 22px;
   height: 22px;
-  color: #477a43;
+  color: #824653;
   pointer-events: none;
 }
 
@@ -276,14 +276,14 @@ input#nis {
 }
 
 input#nis:focus {
-  border-color: #678d58 !important;
-  animation: pulseGreenSoft 2s infinite ease-in-out;
+  border-color: #824653 !important;
+  animation: pulseBurgundySoft 2s infinite ease-in-out;
 }
 
-@keyframes pulseGreenSoft {
-  0% { box-shadow: 0 0 0 2px rgba(103, 141, 88, 0.15); }
-  50% { box-shadow: 0 0 0 4px rgba(103, 141, 88, 0.3); }
-  100% { box-shadow: 0 0 0 2px rgba(103, 141, 88, 0.15); }
+@keyframes pulseBurgundySoft {
+  0% { box-shadow: 0 0 0 2px rgba(130, 70, 83, 0.15); }
+  50% { box-shadow: 0 0 0 4px rgba(130, 70, 83, 0.3); }
+  100% { box-shadow: 0 0 0 2px rgba(130, 70, 83, 0.15); }
 }
 
 .scanner-config-indicators {
@@ -372,7 +372,7 @@ input#nis:focus {
 .idle-clock-digital {
   font-size: 32px;
   font-weight: 800;
-  color: #678d58;
+  color: #824653;
   letter-spacing: 1px;
   margin: 0;
   text-align: center;
@@ -631,14 +631,14 @@ input#nis:focus {
 .kelas-percent-clean { font-weight: 800; font-size: 10.5px; background: transparent !important; padding: 0; }
 
 .text-high { color: #22c55e !important; }
-.text-medium { color: #678d58 !important; }
+.text-medium { color: #824653 !important; }
 .text-low { color: #dd9787 !important; }
 
 .mini-bar-bg { width: 100%; height: 3px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
 .mini-bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
 
 .bar-high { background: #22c55e !important; }
-.bar-medium { background: #678d58 !important; }
+.bar-medium { background: #824653 !important; }
 .bar-low { background: #dd9787 !important; }
 
 .empty-rekap-state {
@@ -650,9 +650,9 @@ input#nis:focus {
 }
 
 .empty-rekap-image { display: block; object-fit: contain; width: min(260px, 65%); max-height: 200px; margin-bottom: 5px; }
-.empty-rekap-state h3 { margin: 0 0 4px; color: #234c38; font-weight: 700; font-size: 17px; }
-.empty-rekap-state p { margin: 0 0 2px; color: #587466; font-size: 14px; font-weight: 600; }
-.empty-rekap-state span { max-width: 360px; color: #82968a; font-size: 12px; line-height: 1.6; }
+.empty-rekap-state h3 { margin: 0 0 4px; color: #824653; font-weight: 700; font-size: 17px; }
+.empty-rekap-state p { margin: 0 0 2px; color: #6F3945; font-size: 14px; font-weight: 600; }
+.empty-rekap-state span { max-width: 360px; color: #A66F7A; font-size: 12px; line-height: 1.6; }
 
 body.effects-disabled .kelas-item-compact,
 body.effects-disabled .mini-bar-fill,
@@ -799,8 +799,8 @@ body.effects-disabled .idle-container {
 }
 .hall-of-fame-card.hof-idle-mode .hof-top-header { display: none; }
 .hall-of-fame-card.hof-idle-mode .hof-3col-grid { flex: 1 1 auto; width: 100%; min-height: 0; grid-template-columns: minmax(0, 1fr); grid-template-rows: 1fr; grid-auto-flow: row; }
-.hof-idle-state strong { color: #234c38; font-size: 16px; }
-.hof-idle-state span { color: #82968a; font-size: 12px; line-height: 1.5; }
+.hof-idle-state strong { color: #824653; font-size: 16px; }
+.hof-idle-state span { color: #A66F7A; font-size: 12px; line-height: 1.5; }
 
 .hof-fade-in { animation: opacityOnlyFade 0.25s linear; }
 @keyframes opacityOnlyFade { from { opacity: 0.5; } to { opacity: 1; } }
@@ -968,7 +968,7 @@ body.effects-disabled .idle-container {
 
 #settingsModal .settings-loading-spinner {
   border: 3px solid #e4e5d9;
-  border-top: 3px solid #477a43;
+  border-top: 3px solid #824653;
   border-radius: 50%;
   width: 30px;
   height: 30px;
@@ -1012,9 +1012,9 @@ body.effects-disabled .idle-container {
 
 .settings-main-tabs .tab-btn:hover { background: #e2e8f0; border-color: #94a3b8; }
 .settings-main-tabs .tab-btn.active {
-  background: #7fa96f;
+  background: #A66F7A;
   color: #fff;
-  border-color: #7fa96f;
+  border-color: #A66F7A;
   box-shadow: 0 2px 6px rgba(83, 126, 69, 0.2);
 }
 
@@ -1044,9 +1044,9 @@ body.effects-disabled .idle-container {
 
 .settings-time-subtabs .tab-btn:hover { border-color: #c9d8c4; background: #f3f7f1; }
 .settings-time-subtabs .tab-btn.active {
-  background: #7fa96f;
+  background: #A66F7A;
   color: #fff;
-  border: 1px solid #7fa96f;
+  border: 1px solid #A66F7A;
   box-shadow: 0 2px 5px rgba(83, 126, 69, 0.18);
 }
 
@@ -1094,7 +1094,7 @@ body.effects-disabled .idle-container {
   background: #ffffff;
 }
 
-.form-group input:focus { border-color: #678d58; }
+.form-group input:focus { border-color: #824653; }
 
 #settingsModal .settings-fields-grid {
   width: 100%;
@@ -1122,7 +1122,7 @@ body.effects-disabled .idle-container {
 
 .btn-save {
   flex: 1;
-  background: #678d58;
+  background: #824653;
   color: white;
   border: none;
   padding: 10px;
@@ -1132,7 +1132,7 @@ body.effects-disabled .idle-container {
   text-align: center;
   transition: all 0.2s ease;
 }
-.btn-save:hover { background: #557548; }
+.btn-save:hover { background: #6F3945; }
 
 .btn-cancel {
   flex: 1;
@@ -1232,7 +1232,7 @@ button.config-jam-switch-option.is-selected {
   box-shadow: 0 2px 5px rgba(221, 151, 135, 0.4) !important;
 }
 
-.config-jam-switch-option:focus-visible { outline: 2px solid #7fa96f; outline-offset: 2px; }
+.config-jam-switch-option:focus-visible { outline: 2px solid #A66F7A; outline-offset: 2px; }
 
 /* ==========================================================================
    7. PROTECTION TAB STYLES (RINGKAS & COMPACT CHECKLIST)
@@ -1718,9 +1718,9 @@ button.config-jam-switch-option.is-selected {
 }
 
 .settings-main-tabs .modal-tab-btn.active {
-  background: #7fa96f;
+  background: #A66F7A;
   color: #fff;
-  border-color: #7fa96f;
+  border-color: #A66F7A;
   box-shadow: 0 2px 6px rgba(83, 126, 69, 0.2);
 }
 
@@ -1746,9 +1746,9 @@ button.config-jam-switch-option.is-selected {
 }
 
 .settings-time-subtabs .modal-subtab-btn.active {
-  background: #7fa96f;
+  background: #A66F7A;
   color: #fff;
-  border: 1px solid #7fa96f;
+  border: 1px solid #A66F7A;
   box-shadow: 0 2px 5px rgba(83, 126, 69, 0.18);
 }
 
