@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Presensi SMK MedikaCom</title>
+  <link rel="icon" type="image/png" href="assets/logo_medcom.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+  <div id="topHeaderBanner">
+    <div class="brand-title">Presensi SMK MedikaCom</div>
+    <div class="left-controls">
+      <div id="statusBar" onclick="handleSyncButtonClick()"><span id="statusText">Checking...</span></div>
+      <button type="button" id="settingsBtn" onclick="openSettingsModal()" title="Konfigurasi" aria-label="Konfigurasi">⚙️</button>
+      <button type="button" id="effectsToggleBtn" class="effects-on" onclick="toggleRekapEffects()" title="Efek Animasi" aria-label="Animasi aktif" aria-pressed="true">🌟</button>
+      <div id="totalHadirBox"><span>Masuk:</span><span id="totalHadirText">0</span></div>
+      <div id="totalPulangBox"><span>Pulang:</span><span id="totalPulangText">0</span></div>
+    </div>
+  </div>
+
+  <div id="loader">
+    <h1>Memuat Data Siswa</h1>
+    <div id="progressText">0%</div>
+    <div id="progressBar"><div id="bar"></div></div>
+  </div>
+
+  <div id="scanArea" class="dashboard-container" style="display:none">
+    <div class="card scanner-card-fixed" id="scannerCard">
+      <div id="syncOverlay" class="sync-overlay" style="display:none">
+        <div id="syncStatusMedia" class="sync-spinner"></div>
+        <div id="syncOverlayText" class="sync-overlay-text">Menyinkronkan Data...</div>
+        <div id="syncOverlaySub" class="sync-overlay-sub">Mohon tunggu, mengirim data offline ke server</div>
+      </div>
+
+      <!-- HEADER CENTER -->
+      <div class="scanner-header-row">
+        <h1 class="scanner-title">Scan QR Presensi</h1>
+
+        <div class="scanner-input-wrapper">
+          <svg
+            class="scan-input-icon"
+            xmlns="http://www.w3.org/2000/svg"
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M4 8V5a1 1 0 0 1 1-1h3" />
+            <path d="M16 4h3a1 1 0 0 1 1 1v3" />
+            <path d="M20 16v3a1 1 0 0 1-1 1h-3" />
+            <path d="M8 20H5a1 1 0 0 1-1-1v-3" />
+            <path d="M7 12h10" />
+          </svg>
+
+          <input
+            id="nis"
+            placeholder="......."
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+          />
+        </div>
+
+        <div class="scanner-config-indicators" aria-label="Status konfigurasi">
+          <span id="jamConfigIndicator" class="scanner-config-indicator" title="Config Jam tidak aktif" aria-label="Config Jam tidak aktif">
+            <span class="indicator-light"></span><span class="indicator-icon">🕒</span>
+          </span>
+          <span id="protectionConfigIndicator" class="scanner-config-indicator" title="Config Proteksi tidak aktif" aria-label="Config Proteksi tidak aktif">
+            <span class="indicator-light"></span><span class="indicator-icon">🛡️</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- AREA RESULT / IDLE MODE -->
+      <div id="resultSlot" style="width: 100%; flex: 1; display: flex; align-items: center; justify-content: center;">
+        <!-- IDLE MODE -->
+        <div id="idleBox" class="idle-container">
+          <img class="logo-idle-mode" src="assets/logo_medcom.png" alt="Logo MedikaCom">
+          <div class="idle-date-text" id="idleDateText">Senin, 28 September 2026</div>
+          <div class="idle-clock-digital" id="idleClockText">00:00:00</div>
+        </div>
+
+        <!-- SCAN ACTIVE MODE -->
+        <div id="scanResultBox" class="scan-split-container" style="display: none;">
+          <div class="scan-split-photo">
+            <img id="scanPhotoImg" src="" alt="Foto Siswa" loading="eager" decoding="sync">
+          </div>
+          <div class="scan-split-info">
+            <div id="scanBadge" class="scan-badge-top"></div>
+            <div id="scanStatusAlert" class="scan-status-alert"></div>
+            <div id="scanStudentName" class="scan-student-name"></div>
+            <div id="scanStudentClass" class="scan-student-class"></div>
+            <div id="scanTimeDigital" class="scan-time-digital"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 📊 KARTU REKAP PER KELAS -->
+    <div class="card jurusan-card-fixed rekap-card-layout">
+      <div id="kelasListContainer">
+
+        <!-- Empty state -->
+        <div id="emptyRekapState" class="empty-rekap-state">
+          <img
+            src="assets/top3kelas.png"
+            alt="Ilustrasi rekap kehadiran"
+            class="empty-rekap-image"
+          />
+
+          <h3>Rekap Kehadiran Kelas</h3>
+          <p>Belum ada presensi hari ini.</p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 🏆 HALL OF FAME WITH MULTI-TINGKAT CAROUSEL SUPPORT -->
+    <div class="card hall-of-fame-card" id="hallOfFameCard">
+      <div class="hof-top-header">
+        <div class="hof-inline-title">
+          <span class="hof-main-label">🏆 Hall of Fame</span>
+        </div>
+        <span id="hofSubLabelContainer" class="hof-sub-label-box"></span>
+        <div id="hofRank1Container" class="hof-rank1-inline" aria-hidden="true"></div>
+      </div>
+      <div id="hofListContainer" class="hof-3col-grid">
+        <div class="hof-empty">Memuat klasemen...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL SETTINGS -->
+  <div id="settingsModal" class="settings-modal-backdrop">
+    <div class="settings-modal-box">
+      <div id="settingsLoadingOverlay" class="settings-loading-overlay" aria-live="polite" aria-hidden="true">
+        <div class="settings-loading-box">
+          <div class="settings-loading-spinner" aria-hidden="true"></div>
+          <p id="settingsLoadingText" class="settings-loading-text">Memproses...</p>
+        </div>
+      </div>
+
+      <!-- HEADER MODAL UTAMA -->
+      <div class="settings-title">
+        <span>Pengaturan Presensi Hari Ini</span>
+      </div>
+
+      <!-- STEP 1: VERIFIKASI PIN PETUGAS -->
+      <div id="pinStep">
+        <div class="form-group">
+          <label>Masukkan PIN:</label>
+          <input type="password" id="pinInput" placeholder="****" maxlength="8">
+        </div>
+        <div class="btn-row">
+          <button class="btn-cancel" onclick="closeSettingsModal()">Tutup</button>
+          <button class="btn-save" onclick="verifyPin()">Lanjut</button>
+        </div>
+      </div>
+
+      <!-- STEP 2: FORM PENGATURAN -->
+      <div id="formStep" style="display:none;">
+
+        <!-- TAB UTAMA -->
+        <div class="settings-main-tabs">
+          <button type="button" class="modal-tab-btn active" onclick="switchTab('configJam')" id="tabBtn-configJam">
+            🕒 Config Jam
+          </button>
+          <button type="button" class="modal-tab-btn" onclick="switchTab('proteksi')" id="tabBtn-proteksi">
+            🛡️ Proteksi
+          </button>
+          <button type="button" class="modal-tab-btn" onclick="switchTab('export')" id="tabBtn-export">
+            📥 Export Data
+          </button>
+        </div>
+
+        <div class="settings-scroll-area">
+
+          <!-- TAB 1: CONFIG JAM -->
+          <div id="tabContent-configJam" class="tab-content">
+            <div class="config-jam-toggle-row">
+              <div>
+                <div class="config-jam-toggle-title">Override Config Jam</div>
+                <div class="config-jam-toggle-description" id="configJamToggleDescription">Gunakan jadwal khusus yang disimpan untuk hari ini.</div>
+              </div>
+              <div id="configJamToggle" class="config-jam-switch" role="group">
+                <button type="button" id="configJamToggleOff" class="config-jam-switch-option" onclick="setConfigJamActive(false)">OFF</button>
+                <button type="button" id="configJamToggleOn" class="config-jam-switch-option is-selected" onclick="setConfigJamActive(true)">ON</button>
+              </div>
+            </div>
+
+            <!-- SUBTAB JADWAL -->
+            <div class="settings-time-subtabs">
+              <button type="button" class="modal-subtab-btn active" onclick="switchTimeTab('global')" id="timeTabBtn-global">Global</button>
+              <button type="button" class="modal-subtab-btn" onclick="switchTimeTab('X')" id="timeTabBtn-X">Tingkat X</button>
+              <button type="button" class="modal-subtab-btn" onclick="switchTimeTab('XI')" id="timeTabBtn-XI">Tingkat XI</button>
+              <button type="button" class="modal-subtab-btn" onclick="switchTimeTab('XII')" id="timeTabBtn-XII">Tingkat XII</button>
+            </div>
+
+            <!-- SUBTAB GLOBAL -->
+            <div id="timeTabContent-global" class="time-tab-content">
+              <div class="config-info">💡 Pengaturan Global menjadi jadwal fallback apabila jadwal khusus tingkat belum diatur.</div>
+              <div class="settings-fields-grid">
+                <div class="form-group"><label>Jam Masuk Fallback:</label><input type="time" id="cfgJamMasukGlobal"></div>
+                <div class="form-group"><label>Jam Pulang Fallback:</label><input type="time" id="cfgJamPulangGlobal"></div>
+                <div class="form-group"><label>Batas Terlambat (Menit):</label><input type="number" id="cfgTerlambatGlobal"></div>
+                <div class="form-group"><label>Batas Sangat Terlambat (Menit):</label><input type="number" id="cfgSangatTerlambatGlobal"></div>
+                <div class="form-group"><label>Batas Sangat Terlambat Sekali (Menit):</label><input type="number" id="cfgSangatTerlambatSekaliGlobal"></div>
+              </div>
+            </div>
+
+            <!-- SUBTAB TINGKAT X -->
+            <div id="timeTabContent-X" class="time-tab-content" style="display:none;">
+              <div class="config-info">💡 Jadwal khusus siswa <b>Tingkat X</b>. Jika kosong, mengikuti Global.</div>
+              <div class="settings-fields-grid">
+                <div class="form-group"><label>Jam Masuk Tingkat X:</label><input type="time" id="cfgJamMasukX"></div>
+                <div class="form-group"><label>Jam Pulang Tingkat X:</label><input type="time" id="cfgJamPulangX"></div>
+              </div>
+            </div>
+
+            <!-- SUBTAB TINGKAT XI -->
+            <div id="timeTabContent-XI" class="time-tab-content" style="display:none;">
+              <div class="config-info">💡 Jadwal khusus siswa <b>Tingkat XI</b>. Jika kosong, mengikuti Global.</div>
+              <div class="settings-fields-grid">
+                <div class="form-group"><label>Jam Masuk Tingkat XI:</label><input type="time" id="cfgJamMasukXI"></div>
+                <div class="form-group"><label>Jam Pulang Tingkat XI:</label><input type="time" id="cfgJamPulangXI"></div>
+              </div>
+            </div>
+
+            <!-- SUBTAB TINGKAT XII -->
+            <div id="timeTabContent-XII" class="time-tab-content" style="display:none;">
+              <div class="config-info">💡 Jadwal khusus siswa <b>Tingkat XII</b>. Jika kosong, mengikuti Global.</div>
+              <div class="settings-fields-grid">
+                <div class="form-group"><label>Jam Masuk Tingkat XII:</label><input type="time" id="cfgJamMasukXII"></div>
+                <div class="form-group"><label>Jam Pulang Tingkat XII:</label><input type="time" id="cfgJamPulangXII"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 2: PROTEKSI -->
+          <div id="tabContent-proteksi" class="tab-content" style="display:none;">
+            <div class="config-jam-toggle-row">
+              <div>
+                <div class="config-jam-toggle-title">Master Proteksi Scanner</div>
+                <div class="config-jam-toggle-description">Aktifkan atau nonaktifkan seluruh fitur pengamanan input.</div>
+              </div>
+              <div id="protectionToggle" class="config-jam-switch" role="group">
+                <button type="button" id="protectionToggleOff" class="config-jam-switch-option" onclick="setAllProtections(false)">OFF</button>
+                <button type="button" id="protectionToggleOn" class="config-jam-switch-option is-selected" onclick="setAllProtections(true)">ON</button>
+              </div>
+            </div>
+
+            <div class="protection-compact-header">
+              <span class="protection-subheading">Daftar Pengamanan:</span>
+              <div class="protection-quick-links">
+                <button type="button" class="btn-text-action" onclick="setAllProtections(true)">Pilih Semua</button>
+                <span class="action-sep">•</span>
+                <button type="button" class="btn-text-action" onclick="setAllProtections(false)">Kosongkan</button>
+              </div>
+            </div>
+
+            <div class="protection-checklist-group">
+              <label class="protection-check-row">
+                <input type="checkbox" class="protection-checkbox" id="cfgProtectManualInput">
+                <span class="protection-label-title">Deteksi Input Manual</span>
+                <span class="protection-label-desc">— Mendeteksi pola ketikan bukan dari scanner</span>
+              </label>
+              <label class="protection-check-row">
+                <input type="checkbox" class="protection-checkbox" id="cfgProtectAutoDelete">
+                <span class="protection-label-title">Hapus Input Otomatis</span>
+                <span class="protection-label-desc">— Mengosongkan input NIS setelah 2 detik idle</span>
+              </label>
+              <label class="protection-check-row">
+                <input type="checkbox" class="protection-checkbox" id="cfgProtectPaste">
+                <span class="protection-label-title">Blokir Paste</span>
+                <span class="protection-label-desc">— Mencegah penempelan teks ke kolom NIS</span>
+              </label>
+              <label class="protection-check-row">
+                <input type="checkbox" class="protection-checkbox" id="cfgProtectDragDrop">
+                <span class="protection-label-title">Blokir Drag &amp; Drop</span>
+                <span class="protection-label-desc">— Mencegah isi teks melalui drag &amp; drop</span>
+              </label>
+              <label class="protection-check-row">
+                <input type="checkbox" class="protection-checkbox" id="cfgProtectClipboardShortcut">
+                <span class="protection-label-title">Blokir Shortcut Clipboard</span>
+                <span class="protection-label-desc">— Mencegah Ctrl+C, Ctrl+V, dan Ctrl+X</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- TAB 3: EXPORT DATA -->
+          <div id="tabContent-export" class="tab-content" style="display:none;">
+            <div class="export-panel">
+              <div class="export-icon">📥</div>
+              <div class="export-title">Backup Data Pending</div>
+              <div class="export-description">
+                Unduh cadangan data presensi yang masih pending dalam format CSV untuk kebutuhan backup atau pemulihan data.
+              </div>
+              <button type="button" class="btn-backup export-backup-button" onclick="downloadLocalStorageBackup()">
+                📥 Download Backup Data Pending (.CSV)
+              </button>
+            </div>
+          </div>
+
+        </div><!-- /.settings-scroll-area -->
+
+        <hr class="settings-divider">
+        <div class="btn-row settings-footer">
+          <button type="button" class="btn-cancel" onclick="closeSettingsModal()">Tutup</button>
+          <button type="button" class="btn-save" onclick="saveOverrideJam()">Simpan</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="customAlertModal" class="settings-modal-backdrop">
+    <div class="settings-modal-box" style="text-align: center; max-width: 350px; padding: 30px 24px;">
+      <div id="alertIcon" style="font-size: 48px; margin-bottom: 12px; line-height: 1;">🚀</div>
+      <div id="alertMessage" style="font-size: 15px; font-weight: 700; color: #1e293b; line-height: 1.5; margin-bottom: 20px;">
+        Pesan alert di sini...
+      </div>
+      <button class="btn-save" style="width: 100%; padding: 10px;" onclick="closeCustomAlert()">Tutup</button>
+    </div>
+  </div>
+
+  <!-- SCRIPT LOADING -->
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

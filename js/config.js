@@ -1,0 +1,2 @@
+// URL Web App GAS (Ganti dengan URL Deployment GAS kamu jika ada pembaruan)
+const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxR0bwVJCXQY5DQKawqOBQO6vNwU8UMFLJ3AuBytSRgQR3TW9rJZ0r58JGkL2u_HxYMhw/exec";
