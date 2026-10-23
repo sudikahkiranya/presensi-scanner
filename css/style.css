@@ -630,16 +630,16 @@ input#nis:focus {
 .kelas-stats-text { font-size: 10.5px; font-weight: 700; color: #334155; display: flex; align-items: center; gap: 3px; white-space: nowrap; }
 .kelas-percent-clean { font-weight: 800; font-size: 10.5px; background: transparent !important; padding: 0; }
 
-.text-high { color: #22c55e !important; }
-.text-medium { color: #824653 !important; }
-.text-low { color: #dd9787 !important; }
+.text-high { color: #16a34a !important; }
+.text-medium { color: #ca8a04 !important; }
+.text-low { color: #dc2626 !important; }
 
 .mini-bar-bg { width: 100%; height: 3px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
 .mini-bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
 
-.bar-high { background: #22c55e !important; }
-.bar-medium { background: #824653 !important; }
-.bar-low { background: #dd9787 !important; }
+.bar-high { background: #16a34a !important; }
+.bar-medium { background: #eab308 !important; }
+.bar-low { background: #dc2626 !important; }
 
 .empty-rekap-state {
   width: 100%; min-height: 100%;
