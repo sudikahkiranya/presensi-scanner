@@ -1312,10 +1312,12 @@ function renderJurusanUI() {
   Object.keys(students).forEach(nis => {
     const s = students[nis];
     if (!s || !s.class) return;
-    if (!isLevelAllowed(s.tingkat, s.class)) return;
 
     const namaKelas = String(s.class).trim();
     let tingkat = String(s.tingkat || "").trim().toUpperCase();
+
+    // Buka filter jika mode TKA, jalankan pengecekan isLevelAllowed jika reguler
+    if (tingkat !== "TKA" && !isLevelAllowed(s.tingkat, s.class)) return;
 
     if (!tingkat || tingkat === "UNDEFINED") {
       if (namaKelas.includes("XII") || namaKelas.startsWith("XII")) tingkat = "XII";
@@ -1355,6 +1357,7 @@ function renderJurusanUI() {
     "X": [],
     "XI": [],
     "XII": [],
+    "TKA": [],
     "LAINNYA": []
   };
 
@@ -1379,7 +1382,7 @@ function renderJurusanUI() {
     });
   });
 
-  ["X", "XI", "XII", "LAINNYA"].forEach(tKat => {
+  ["X", "XI", "XII", "TKA", "LAINNYA"].forEach(tKat => {
     groupedByTingkat[tKat].sort((a, b) => {
       if (b.percentRounded !== a.percentRounded) return b.percentRounded - a.percentRounded;
       if (a.lastScanTime > 0 && b.lastScanTime > 0 && a.lastScanTime !== b.lastScanTime) return a.lastScanTime - b.lastScanTime;
@@ -1392,16 +1395,21 @@ function renderJurusanUI() {
   let htmlContent = "";
   let hasData = false;
 
-  ["X", "XI", "XII"].forEach(tKat => {
+  // Daftar kelompok yang akan dirender ke kolom UI
+  const displayLevels = ["X", "XI", "XII", "TKA"];
+
+  displayLevels.forEach(tKat => {
     const listKelas = groupedByTingkat[tKat];
-    if (!isLevelAllowed(tKat, "")) return;
+    if (tKat !== "TKA" && !isLevelAllowed(tKat, "")) return;
     if (listKelas.length === 0) return;
 
     hasData = true;
 
+    const titleHeader = tKat === "TKA" ? "Rekap Sesi TKA" : `Rekap Kelas ${tKat}`;
+
     htmlContent += `
       <div class="tingkat-column">
-        <div class="tingkat-column-title">Rekap Kelas ${tKat}</div>
+        <div class="tingkat-column-title">${titleHeader}</div>
         <div class="kelas-list-stack">
     `;
 
