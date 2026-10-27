@@ -743,17 +743,26 @@ body.effects-disabled .idle-container {
 
 .hof-item-clean {
   display: grid;
-  grid-template-columns: 24px minmax(0, var(--hof-name-width, 24ch)) 9ch 9ch;
+  grid-template-columns: 24px minmax(0, 1fr) auto auto; /* Kolom nama fleksibel, kelas & jam auto width */
   align-items: center;
-  column-gap: 4px;
+  column-gap: 8px; /* Diberi jarak antar kolom biar makin rapi */
   font-size: 13px;
-  width: 100%; min-width: 0;
+  width: 100%;
+  min-width: 0;
   white-space: nowrap;
 }
 
 .hof-num { font-weight: 800; color: #1e293b; font-size: 13px; text-align: right; padding-right: 2px; }
 .hof-name-bold { font-weight: 700; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-.hof-class-tag { font-weight: 600; color: #64748b; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hof-class-tag {
+  font-weight: 600;
+  color: #64748b;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: visible !important; /* Biar tidak di-crop */
+  text-overflow: unset !important; /* Hilangkan titik-titik (...) */
+  width: auto !important; /* Biarkan melebar alami */
+}
 .hof-time-tag { font-weight: 800; color: #16a34a; font-size: 12px; white-space: nowrap; }
 
 .hall-of-fame-card.hof-compact-mode {
