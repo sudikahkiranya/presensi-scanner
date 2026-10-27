@@ -352,24 +352,22 @@ input#nis:focus {
   object-fit: contain;
   display: block;
   margin: 0 auto 10px auto !important;
-  
-  /* Posisi tetap diam (transform dimatikan) */
   transform: none !important;
   
-  /* Efek Kilau PINGGIRAN Bernapas yang Halus */
+  /* Fallback warna hijau/maroon jika JS belum jalan */
+  --glow-rgb: 34, 197, 94; 
+  
   animation: breathingLogoGlow 3.5s infinite ease-in-out;
 }
 
 @keyframes breathingLogoGlow {
   0%, 100% {
-    /* Cahaya kilau biru tipis/lembut */
-    filter: drop-shadow(0 0 8px rgba(37, 99, 235, 0.35)) 
+    filter: drop-shadow(0 0 10px rgba(var(--glow-rgb), 0.35)) 
             drop-shadow(0 4px 12px rgba(0, 0, 0, 0.06));
   }
   50% {
-    /* Cahaya kilau membesar dan makin terang */
-    filter: drop-shadow(0 0 22px rgba(37, 99, 235, 0.8)) 
-            drop-shadow(0 0 35px rgba(59, 130, 246, 0.5));
+    filter: drop-shadow(0 0 24px rgba(var(--glow-rgb), 0.85)) 
+            drop-shadow(0 0 38px rgba(var(--glow-rgb), 0.5));
   }
 }
 

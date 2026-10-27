@@ -2171,3 +2171,58 @@ try {
 } catch (_) { 
   updateConfigIndicators(); 
 }
+
+// Function ekstraksi warna dominan dari image logo/foto
+function applyDominanGlow(imgElement) {
+  if (!imgElement) return;
+
+  const getDominantColor = (img) => {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = 50;
+    canvas.height = 50;
+
+    // Draw image ke canvas ukuran kecil
+    ctx.drawImage(img, 0, 0, 50, 50);
+    const data = ctx.getImageData(0, 0, 50, 50).data;
+
+    let r = 0, g = 0, b = 0, count = 0;
+
+    for (let i = 0; i < data.length; i += 4) {
+      const alpha = data[i + 3];
+      // Abaikan piksel transparan
+      if (alpha > 128) {
+        r += data[i];
+        g += data[i + 1];
+        b += data[i + 2];
+        count++;
+      }
+    }
+
+    if (count === 0) return "37, 99, 235"; // Fallback ke rgb default
+    return `${Math.round(r / count)}, ${Math.round(g / count)}, ${Math.round(b / count)}`;
+  };
+
+  const processImg = () => {
+    try {
+      const rgbStr = getDominantColor(imgElement);
+      // Inject CSS Variable ke elemen logo
+      imgElement.style.setProperty("--glow-rgb", rgbStr);
+    } catch (e) {
+      // Jika kena CORS, fallback ke warna tema aplikasi (#824653 -> RGB: 130, 70, 83)
+      imgElement.style.setProperty("--glow-rgb", "130, 70, 83");
+    }
+  };
+
+  if (imgElement.complete && imgElement.naturalWidth !== 0) {
+    processImg();
+  } else {
+    imgElement.onload = processImg;
+  }
+}
+
+// Inisialisasi saat aplikasi pertama dibuka
+document.addEventListener("DOMContentLoaded", () => {
+  const logoIdle = document.querySelector(".logo-idle-mode");
+  if (logoIdle) applyDominanGlow(logoIdle);
+});
