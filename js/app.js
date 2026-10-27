@@ -1223,12 +1223,9 @@ function loadLocalOverrideJam() {
   if (saved) {
     try {
       const parsed = JSON.parse(saved);
-      if (parsed.date === getLocalDateString() && parsed.config) {
-        if (parsed.enabled === true) {
-          activeConfig = JSON.parse(JSON.stringify(parsed.config));
-        } else if (window.scannerDefaultConfig) {
-          activeConfig = JSON.parse(JSON.stringify(window.scannerDefaultConfig));
-        }
+      // Hanya timpa kalau user memproses toggle manual HARI INI via Modal Settings
+      if (parsed.date === getLocalDateString() && parsed.enabled === true && parsed.config) {
+        activeConfig = JSON.parse(JSON.stringify(parsed.config));
         renderConfigJamToggle();
         updateConfigIndicators();
         if (typeof updateActiveLevelsBadge === "function") updateActiveLevelsBadge();
@@ -1240,6 +1237,7 @@ function loadLocalOverrideJam() {
     }
   }
 
+  // Jika tidak ada override manual dari modal, gunakan config otomatis bawaan backend
   if (window.scannerDefaultConfig) {
     activeConfig = JSON.parse(JSON.stringify(window.scannerDefaultConfig));
   }
