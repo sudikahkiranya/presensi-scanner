@@ -1613,6 +1613,7 @@ Object.keys(rekapMap).forEach(kName => {
 function applyRekapOverflowLayout(container = document.getElementById("kelasListContainer")) {
   if (!container) return;
 
+  // 1. Bersihkan pembungkus grup lama jika ada
   const oldGroups = Array.from(container.querySelectorAll(":scope > .rekap-column-group"));
   oldGroups.forEach(group => {
     while (group.firstElementChild) container.insertBefore(group.firstElementChild, group);
@@ -1620,83 +1621,37 @@ function applyRekapOverflowLayout(container = document.getElementById("kelasList
   });
 
   const columns = Array.from(container.querySelectorAll(":scope > .tingkat-column"));
-  container.classList.remove("rekap-levels-merged", "rekap-levels-1", "rekap-levels-2", "rekap-levels-3");
+  if (!columns.length) return;
+
+  // 2. Reset kelas overflow pada stack
   columns.forEach(column => {
     const stack = column.querySelector(".kelas-list-stack");
     if (stack) stack.classList.remove("is-overflow-grid");
   });
-  if (!columns.length) return;
 
-  container.classList.add("rekap-levels-merged");
-
+  // 3. Kalkulasi batas tinggi kontainer
   requestAnimationFrame(() => {
-    if (!container.isConnected || !columns.every(col => col.isConnected)) return;
-    const containerHeight = container.clientHeight;
-    if (!containerHeight) return;
+    if (!container.isConnected) return;
+    const containerHeight = container.clientHeight || 500;
+    const usableHeight = Math.max(200, containerHeight - 30);
 
-    const cs = getComputedStyle(container);
-    const verticalPadding = (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
-    const gap = parseFloat(cs.rowGap || cs.gap) || 0;
-    const usableHeight = Math.max(0, containerHeight - verticalPadding - 6);
-
-    const getNaturalColumnHeight = column => {
-      const title = column.querySelector(".tingkat-column-title");
+    columns.forEach(column => {
       const stack = column.querySelector(".kelas-list-stack");
-      if (!stack) return 0;
+      if (!stack) return;
+
+      const title = column.querySelector(".tingkat-column-title");
       const titleHeight = title ? title.getBoundingClientRect().height : 0;
-      const titleMargin = title ? (parseFloat(getComputedStyle(title).marginBottom) || 0) : 0;
-      const stackGap = parseFloat(getComputedStyle(stack).rowGap || getComputedStyle(stack).gap) || 0;
-      const cardsHeight = Array.from(stack.children).reduce((sum, card) => {
-        const style = getComputedStyle(card);
-        return sum + card.getBoundingClientRect().height + (parseFloat(style.marginTop) || 0) + (parseFloat(style.marginBottom) || 0);
-      }, 0);
-      const columnGapLocal = parseFloat(getComputedStyle(column).rowGap || getComputedStyle(column).gap) || 0;
-      return titleHeight + titleMargin + cardsHeight + Math.max(0, stack.children.length - 1) * stackGap + (stack.children.length ? columnGapLocal : 0);
-    };
+      const stackHeight = stack.getBoundingClientRect().height;
 
-    const heights = columns.map(getNaturalColumnHeight);
-    const mergedHeight = heights.reduce((a, b) => a + b, 0) + Math.max(0, columns.length - 1) * gap;
-
-    if (mergedHeight <= usableHeight) return;
-
-    const groups = [];
-    let current = [];
-    let currentHeight = 0;
-    columns.forEach((column, index) => {
-      const h = heights[index];
-      const candidateHeight = current.length ? currentHeight + gap + h : h;
-      if (current.length && candidateHeight > usableHeight) {
-        groups.push(current);
-        current = [column];
-        currentHeight = h;
-      } else {
-        current.push(column);
-        currentHeight = candidateHeight;
+      // Jika jumlah item > 6 atau total tingginya melebihi kontainer, aktifkan mode Compact 2 Kolom
+      if (stack.children.length > 6 || (titleHeight + stackHeight) > usableHeight) {
+        stack.classList.add("is-overflow-grid");
       }
-    });
-    if (current.length) groups.push(current);
-
-    container.classList.remove("rekap-levels-merged");
-    container.classList.add(`rekap-levels-${Math.max(1, Math.min(3, groups.length))}`);
-
-    groups.forEach(groupColumns => {
-      const wrapper = document.createElement("div");
-      wrapper.className = "rekap-column-group";
-      groupColumns[0].parentNode.insertBefore(wrapper, groupColumns[0]);
-      groupColumns.forEach(column => wrapper.appendChild(column));
-    });
-
-    requestAnimationFrame(() => {
-      if (!container.isConnected) return;
-      columns.forEach((column, index) => {
-        const stack = column.querySelector(".kelas-list-stack");
-        if (!stack || stack.children.length <= 3) return;
-        if (heights[index] > usableHeight + 2) stack.classList.add("is-overflow-grid");
-      });
     });
   });
 }
 
+// OBSERVER & RESIZE LISTENER
 if (!window.__rekapOverflowObserver && typeof ResizeObserver !== "undefined") {
   const rekapContainer = document.getElementById("kelasListContainer");
   if (rekapContainer) {

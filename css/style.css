@@ -1795,10 +1795,9 @@ button.config-jam-switch-option.is-selected {
 
 /* AUTO COMPACT SAAT DATA REKAP MELUAP */
 .rekap-card-layout {
-  overflow-y: auto !important; /* Agar jika diluar layar tetap bisa di-scroll rapi */
+  overflow-y: auto !important;
 }
 
-/* Jika kolom mengalami overflow, jadikan 2 kolom mini / sesuaikan ukurannya */
 .kelas-list-stack.is-overflow-grid {
   display: grid !important;
   grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)) !important;
