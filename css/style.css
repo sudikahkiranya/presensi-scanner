@@ -586,11 +586,11 @@ input#nis:focus {
   font-size: 13px !important;
   font-weight: 800 !important;
   color: #334155 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.5px !important;
-  margin: 0 0 6px 0 !important;
-  padding-bottom: 4px !important;
-  border-bottom: 2px dashed #cbd5e1 !important; /* Pemanis garis putus-putus di bawah judul */
+  text-transform: capitalize !important; /* Biar tulisan Proper Case (misal: Rekap Kelas X) */
+  letter-spacing: 0.3px !important;
+  margin: 0 0 8px 0 !important;
+  padding-bottom: 0 !important;
+  border-bottom: none !important;        /* Menghilangkan garis strip pemisah */
   text-align: center !important;
   white-space: nowrap !important;
   background: transparent !important;
