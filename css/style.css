@@ -362,12 +362,14 @@ input#nis:focus {
 
 @keyframes breathingLogoGlow {
   0%, 100% {
-    filter: drop-shadow(0 0 10px rgba(var(--glow-rgb), 0.35)) 
-            drop-shadow(0 4px 12px rgba(0, 0, 0, 0.06));
+    /* Pendaran awal sangat tipis */
+    filter: drop-shadow(0 0 6px rgba(var(--glow-rgb), 0.2)) 
+            drop-shadow(0 4px 10px rgba(0, 0, 0, 0.05));
   }
   50% {
-    filter: drop-shadow(0 0 24px rgba(var(--glow-rgb), 0.85)) 
-            drop-shadow(0 0 38px rgba(var(--glow-rgb), 0.5));
+    /* Pendaran maksimal dibuat terbatas & tidak meledak */
+    filter: drop-shadow(0 0 14px rgba(var(--glow-rgb), 0.45)) 
+            drop-shadow(0 0 20px rgba(var(--glow-rgb), 0.25));
   }
 }
 
