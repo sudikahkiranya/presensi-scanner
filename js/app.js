@@ -1018,15 +1018,22 @@ function updateConfigIndicators() {
   const protectEl = document.getElementById("protectionConfigIndicator");
   const today = getLocalDateString();
   let jamActive = false;
+  
   try {
     const saved = JSON.parse(localStorage.getItem("jam_override_today") || "null");
-    jamActive = !!(saved && saved.date === today && saved.config && saved.enabled !== false);
-  } catch (_) {}
+    const manualActive = !!(saved && saved.date === today && saved.config && saved.enabled !== false);
+    // Aktif jika ada simpanan manual ON atau activeConfig dari backend bernilai isKhusus
+    jamActive = manualActive || !!(activeConfig && activeConfig.isKhusus);
+  } catch (_) {
+    jamActive = !!(activeConfig && activeConfig.isKhusus);
+  }
+
   if (jamEl) {
     jamEl.classList.toggle("is-active", jamActive);
     jamEl.title = jamActive ? "Config Jam aktif untuk hari ini" : "Config Jam tidak aktif";
     jamEl.setAttribute("aria-label", jamEl.title);
   }
+
   const cfg = window.scannerProtectionConfig || {};
   const protectActive = Object.keys(cfg).some(k => cfg[k] === true);
   if (protectEl) {
@@ -1071,7 +1078,11 @@ function getTodayJamOverride() {
 
 function isConfigJamEnabledToday() {
   const saved = getTodayJamOverride();
-  return !!(saved && saved.enabled === true);
+  if (saved && typeof saved.enabled === "boolean") {
+    return saved.enabled;
+  }
+  // Jika belum ada tindakan manual, ikuti status isKhusus bawaan backend
+  return !!(activeConfig && activeConfig.isKhusus);
 }
 
 function renderConfigJamToggle() {
@@ -1079,8 +1090,7 @@ function renderConfigJamToggle() {
   const btnOff = document.getElementById("configJamToggleOff");
   if (!btnOn || !btnOff) return;
 
-  const saved = getTodayJamOverride();
-  const isEnabled = saved ? saved.enabled === true : false;
+  const isEnabled = isConfigJamEnabledToday();
 
   if (isEnabled) {
     btnOn.classList.add("is-selected");
