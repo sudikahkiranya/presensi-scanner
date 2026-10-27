@@ -1090,9 +1090,17 @@ function saveProtectionSettings() {
 }
 
 function applyScannerProtectionSettings(config) {
-  window.scannerProtectionConfig = Object.assign({
-    manualInput: true, autoDelete: true, paste: true, dragDrop: true, clipboardShortcut: true
-  }, config || {});
+  // Jika config kosong, fallback ke state lama atau default true
+  const current = window.scannerProtectionConfig || {};
+
+  window.scannerProtectionConfig = {
+    manualInput: config && config.manualInput !== undefined ? !!config.manualInput : (current.manualInput !== undefined ? current.manualInput : true),
+    autoDelete: config && config.autoDelete !== undefined ? !!config.autoDelete : (current.autoDelete !== undefined ? current.autoDelete : true),
+    paste: config && config.paste !== undefined ? !!config.paste : (current.paste !== undefined ? current.paste : true),
+    dragDrop: config && config.dragDrop !== undefined ? !!config.dragDrop : (current.dragDrop !== undefined ? current.dragDrop : true),
+    clipboardShortcut: config && config.clipboardShortcut !== undefined ? !!config.clipboardShortcut : (current.clipboardShortcut !== undefined ? current.clipboardShortcut : true)
+  };
+
   updateConfigIndicators();
 }
 
@@ -1105,7 +1113,6 @@ function updateConfigIndicators() {
   try {
     const saved = JSON.parse(localStorage.getItem("jam_override_today") || "null");
     const manualActive = !!(saved && saved.date === today && saved.config && saved.enabled !== false);
-    // Aktif jika ada simpanan manual ON atau activeConfig dari backend bernilai isKhusus
     jamActive = manualActive || !!(activeConfig && activeConfig.isKhusus);
   } catch (_) {
     jamActive = !!(activeConfig && activeConfig.isKhusus);
@@ -1117,8 +1124,12 @@ function updateConfigIndicators() {
     jamEl.setAttribute("aria-label", jamEl.title);
   }
 
+  // BACA HANYA DARI VARIABEL GLOBAL SCANNER FE
   const cfg = window.scannerProtectionConfig || {};
-  const protectActive = Object.keys(cfg).some(k => cfg[k] === true);
+  
+  // Jika minimal ada 1 proteksi yang bernilai true, maka indikator dianggap AKTIF (Hijau)
+  const protectActive = Object.keys(cfg).length === 0 ? true : Object.keys(cfg).some(k => cfg[k] === true);
+
   if (protectEl) {
     protectEl.classList.toggle("is-active", protectActive);
     protectEl.title = protectActive ? "Config Proteksi aktif" : "Config Proteksi tidak aktif";
