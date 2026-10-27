@@ -922,7 +922,7 @@ function verifyPin() {
 
       const byLevel = activeConfig.byLevel || {};
       document.getElementById("cfgJamMasukX").value = (byLevel["X"] && byLevel["X"].jamMasuk) ? byLevel["X"].jamMasuk : "";
-      document.getElementById("cfgJamPulangX").value = (byLevel["X"] && byLevel["X"].jamPulang) ? byLevel["X"].jamPulang : "";
+      document.getElementById("cfgJamPulangX").value = (byLevel["XII"] && byLevel["X"].jamPulang) ? byLevel["X"].jamPulang : "";
       document.getElementById("cfgJamMasukXI").value = (byLevel["XI"] && byLevel["XI"].jamMasuk) ? byLevel["XI"].jamMasuk : "";
       document.getElementById("cfgJamPulangXI").value = (byLevel["XI"] && byLevel["XI"].jamPulang) ? byLevel["XI"].jamPulang : "";
       document.getElementById("cfgJamMasukXII").value = (byLevel["XII"] && byLevel["XII"].jamMasuk) ? byLevel["XII"].jamMasuk : "";
@@ -931,7 +931,7 @@ function verifyPin() {
       switchTab('configJam');
       switchTimeTab('global');
 
-      loadProtectionSettings(function() {
+      const onCompleteVerify = function() {
         hideSettingsLoading(false);
         setModalMode("settings");
         
@@ -939,7 +939,14 @@ function verifyPin() {
         document.getElementById("formStep").style.display = "flex";
 
         renderConfigJamToggle();
-      });
+      };
+
+      // Hanya load form proteksi jika Super Admin
+      if (window.settingsAccessRole === "superadmin") {
+        loadProtectionSettings(onCompleteVerify);
+      } else {
+        onCompleteVerify();
+      }
     })
     .catch(err => {
       hideSettingsLoading(true);
@@ -1012,7 +1019,7 @@ function loadProtectionSettings(onComplete) {
         clipboardShortcut: serverConfig && serverConfig.clipboardShortcut !== undefined ? !!serverConfig.clipboardShortcut : true
       };
 
-      // 2. ISIKAN STATUS CENTANG KE HTML
+      // 2. ISIKAN STATUS CENTANG KE HTML MODAL SAJA (JANGAN TIMPA SYSTEM GLOBAL FE DULU!)
       const ids = {
         manualInput: "cfgProtectManualInput",
         autoDelete: "cfgProtectAutoDelete",
@@ -1026,19 +1033,14 @@ function loadProtectionSettings(onComplete) {
         if (el) el.checked = (finalConfig[key] === true);
       });
 
-      // 3. TERAPKAN KE SCANNER & DISIMPAN KE LOCALSTORAGE
-      applyScannerProtectionSettings(finalConfig);
-      localStorage.setItem("scanner_protection_config", JSON.stringify(finalConfig));
+      // Update warna tombol Switch ON/OFF di UI modal
+      updateProtectionStatusUI();
 
-      // 4. SELESAIKAN LOADING SEBELUM UPDATE SWITCH UI
       if (typeof onComplete === "function") {
         onComplete();
       } else {
         hideSettingsLoading(true);
       }
-
-      // Update warna tombol Switch ON/OFF setelah DOM aktif
-      setTimeout(updateProtectionStatusUI, 50);
     })
     .catch(err => { 
       hideSettingsLoading(true); 
