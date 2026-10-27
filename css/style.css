@@ -1,5 +1,5 @@
 /* ==========================================================================
-   1. RESET, BASE STYLES & ANIMATIONS
+   1. RESET & BASE STYLES
    ========================================================================== */
 * {
   box-sizing: border-box;
@@ -45,37 +45,14 @@ h1 {
 .offline { color: #dc2626; }
 .error { color: #dc2626; font-size: 18px; font-weight: 700; text-align: center; }
 
-/* State & Animasi Flash */
 .flash-success { animation: flashGreen 0.6s; }
 .flash-error { animation: flashRed 0.6s; }
 
 @keyframes flashGreen { 0% { background: #bbf7d0; } 100% { background: #F5F0E7; } }
 @keyframes flashRed { 0% { background: #fecaca; } 100% { background: #F5F0E7; } }
+
 @keyframes popIn { 0% { transform: scale(0); } 100% { transform: scale(1); } }
 @keyframes spin { 100% { transform: rotate(360deg); } }
-
-@keyframes breathingLogoGlow {
-  0%, 100% {
-    filter: drop-shadow(0 0 6px rgba(var(--glow-rgb), 0.2)) 
-            drop-shadow(0 4px 10px rgba(0, 0, 0, 0.05));
-  }
-  50% {
-    filter: drop-shadow(0 0 14px rgba(var(--glow-rgb), 0.45)) 
-            drop-shadow(0 0 20px rgba(var(--glow-rgb), 0.25));
-  }
-}
-
-@keyframes pulseBurgundySoft {
-  0% { box-shadow: 0 0 0 2px rgba(130, 70, 83, 0.15); }
-  50% { box-shadow: 0 0 0 4px rgba(130, 70, 83, 0.3); }
-  100% { box-shadow: 0 0 0 2px rgba(130, 70, 83, 0.15); }
-}
-
-@keyframes pulseSyncTerracotta {
-  0% { box-shadow: 0 0 0 0 rgba(221, 151, 135, 0.6); }
-  70% { box-shadow: 0 0 0 8px rgba(221, 151, 135, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(221, 151, 135, 0); }
-}
 
 /* ==========================================================================
    2. TOP HEADER BANNER & CONTROLS
@@ -114,6 +91,7 @@ h1 {
   gap: 12px;
 }
 
+/* ELEMEN KAPSUL LONJONG (Status, Masuk, Pulang) */
 #clockBox, 
 #statusBar, 
 #totalHadirBox, 
@@ -140,6 +118,7 @@ h1 {
 #totalHadirText { color: #16a34a; font-size: 18px; font-weight: 800; }
 #totalPulangText { color: #2563eb; font-size: 18px; font-weight: 800; }
 
+/* DUA TOMBOL BULAT PERFECT (Settings & Efek) */
 #settingsBtn,
 #effectsToggleBtn {
   background: white;
@@ -167,11 +146,13 @@ h1 {
   transform: scale(1.05);
 }
 
+/* EFEK ON: Background putih bersih, emoji warna normal */
 #effectsToggleBtn.effects-on {
   background: #ffffff !important;
   filter: none !important;
 }
 
+/* EFEK OFF: Background tetep putih, CUMA EMOJI yang abu-abu gelap */
 #effectsToggleBtn.effects-off {
   background: #ffffff !important;
   color: transparent !important;
@@ -188,6 +169,12 @@ h1 {
 }
 .sync-btn-active span { color: #ffffff !important; }
 .sync-btn-active:hover { background: #c88373 !important; transform: scale(1.05); }
+
+@keyframes pulseSyncTerracotta {
+  0% { box-shadow: 0 0 0 0 rgba(221, 151, 135, 0.6); }
+  70% { box-shadow: 0 0 0 8px rgba(221, 151, 135, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(221, 151, 135, 0); }
+}
 
 /* ==========================================================================
    3. DASHBOARD & SCANNER CARD
@@ -210,17 +197,6 @@ h1 {
   grid-template-rows: 1fr auto;
   gap: 12px;
   min-height: 0;
-  align-items: stretch;
-  box-sizing: border-box;
-}
-
-#scanArea > .scanner-card-fixed,
-#scanArea > .jurusan-card-fixed {
-  height: 100% !important;
-  min-height: 0 !important;
-  align-self: stretch;
-  box-sizing: border-box;
-  min-width: 0;
 }
 
 .card {
@@ -304,6 +280,12 @@ input#nis:focus {
   animation: pulseBurgundySoft 2s infinite ease-in-out;
 }
 
+@keyframes pulseBurgundySoft {
+  0% { box-shadow: 0 0 0 2px rgba(130, 70, 83, 0.15); }
+  50% { box-shadow: 0 0 0 4px rgba(130, 70, 83, 0.3); }
+  100% { box-shadow: 0 0 0 2px rgba(130, 70, 83, 0.15); }
+}
+
 .scanner-config-indicators {
   display: flex;
   align-items: center;
@@ -343,7 +325,9 @@ input#nis:focus {
   color: #166534;
 }
 
-.scanner-config-indicator .indicator-icon { font-size: 13px; }
+.scanner-config-indicator .indicator-icon {
+  font-size: 13px;
+}
 
 #resultSlot {
   width: 100%;
@@ -369,8 +353,24 @@ input#nis:focus {
   display: block;
   margin: 0 auto 10px auto !important;
   transform: none !important;
+  
+  /* Fallback warna hijau/maroon jika JS belum jalan */
   --glow-rgb: 34, 197, 94; 
+  
   animation: breathingLogoGlow 3.5s infinite ease-in-out;
+}
+
+@keyframes breathingLogoGlow {
+  0%, 100% {
+    /* Pendaran awal sangat tipis */
+    filter: drop-shadow(0 0 6px rgba(var(--glow-rgb), 0.2)) 
+            drop-shadow(0 4px 10px rgba(0, 0, 0, 0.05));
+  }
+  50% {
+    /* Pendaran maksimal dibuat terbatas & tidak meledak */
+    filter: drop-shadow(0 0 14px rgba(var(--glow-rgb), 0.45)) 
+            drop-shadow(0 0 20px rgba(var(--glow-rgb), 0.25));
+  }
 }
 
 .idle-date-text {
@@ -449,26 +449,8 @@ input#nis:focus {
 
 .scan-status-alert { font-size: 16px; font-weight: 800; }
 .scan-student-name { font-size: 24px; font-weight: 800; color: #0f172a; line-height: 1.15; word-break: break-word; }
-
-#scanStudentClass {
-  font-size: 16px;
-  font-weight: 700;
-  color: #64748b;
-  white-space: normal !important;
-  word-break: break-word;
-  overflow: visible !important;
-  text-overflow: unset !important;
-  line-height: 1.3;
-}
-
-.scan-time-digital {
-  font-size: 28px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  margin-top: 4px;
-  border-top: 2px dashed #e2e8f0;
-  padding-top: 10px;
-}
+.scan-student-class { font-size: 16px; font-weight: 700; color: #64748b; }
+.scan-time-digital { font-size: 28px; font-weight: 800; letter-spacing: 0.5px; margin-top: 4px; border-top: 2px dashed #e2e8f0; padding-top: 10px; }
 
 .sync-overlay {
   position: absolute;
@@ -531,75 +513,95 @@ input#nis:focus {
 }
 
 /* ==========================================================================
-   4. KARTU REKAP KELAS & JURUSAN (AUTO-FLEXRESPONSIF)
+   4. KARTU REKAP KELAS & JURUSAN
    ========================================================================== */
 .jurusan-card-fixed {
   min-height: 520px;
   height: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  justify-content: center;
   text-align: left;
   overflow: hidden;
-  min-width: 0;
 }
 
 .rekap-card-layout {
   padding: 8px !important;
-  overflow-y: auto !important;
 }
 
 #kelasListContainer {
-  width: 100% !important;
-  height: 100% !important;
-  max-height: 100% !important;
-  box-sizing: border-box !important;
-  padding: 6px !important;
-  display: flex !important;
-  flex-direction: row !important;
-  flex-wrap: wrap !important;
-  align-items: flex-start !important;
-  justify-content: flex-start !important;
-  gap: 12px !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  align-content: center;
+  box-sizing: border-box;
+  padding: 2px 4px;
+  gap: 8px;
+  min-height: 0;
 }
 
+#kelasListContainer.rekap-levels-merged { grid-template-columns: minmax(0, 1fr); align-content: center; justify-items: stretch; }
+#kelasListContainer.rekap-levels-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+#kelasListContainer.rekap-levels-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+.rekap-column-group {
+  min-width: 0; min-height: 0;
+  display: flex; flex-direction: column;
+  justify-content: center; gap: 12px;
+  align-self: center;
+}
+.rekap-column-group > .tingkat-column { width: 100%; }
+
+#kelasListContainer.rekap-levels-merged .tingkat-column { width: 100%; justify-self: stretch; }
+
 .tingkat-column {
-  flex: 1 1 200px !important;
-  min-width: 0 !important;
-  max-width: 100% !important;
-  display: flex !important;
-  flex-direction: column !important;
-  background: rgba(248, 250, 252, 0.6) !important;
-  border: 1px solid #e2e8f0 !important;
-  border-radius: 10px !important;
-  padding: 8px !important;
-  box-sizing: border-box !important;
-  gap: 6px !important;
+  min-width: 0; min-height: 0;
+  display: flex; flex-direction: column;
+  justify-content: center; gap: 5px;
 }
 
 .tingkat-column-title {
-  font-size: 12px !important;
-  font-weight: 800 !important;
-  color: #334155 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.3px !important;
-  margin: 0 0 4px 0 !important;
-  padding-bottom: 4px !important;
-  border-bottom: 2px solid #cbd5e1 !important;
-  text-align: center !important;
-  white-space: nowrap !important;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #334155;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin: 0 0 2px 0;
+  padding-bottom: 2px;
+  border-bottom: none !important;
+  text-align: center;
   background: transparent !important;
+  white-space: nowrap;
 }
 
 .kelas-list-stack {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 5px !important;
-  width: 100% !important;
-  min-width: 0 !important;
+  position: relative;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  gap: 5px;
 }
+
+.kelas-list-stack.is-overflow-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: max-content;
+  align-content: center;
+  gap: 7px;
+  min-height: 0;
+}
+
+.kelas-list-stack.is-overflow-grid > .kelas-item-compact:nth-child(-n+3) { grid-column: 1 / -1; }
+.kelas-list-stack.is-overflow-grid > .kelas-item-compact { min-width: 0; padding: 5px 6px; gap: 3px; }
+.kelas-list-stack.is-overflow-grid .kelas-row-top { gap: 4px; }
+.kelas-list-stack.is-overflow-grid .kelas-nama-bold,
+.kelas-list-stack.is-overflow-grid .kelas-stats-text { min-width: 0; font-size: 10.5px; }
+.kelas-list-stack.is-overflow-grid .mini-bar-bg { height: 3px; }
 
 .kelas-item-compact {
   display: flex;
@@ -612,6 +614,7 @@ input#nis:focus {
   transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease, border-color 0.3s ease;
   will-change: transform;
   width: 100%;
+  max-width: 420px;
   box-sizing: border-box;
   padding: 5px 7px;
 }
@@ -625,6 +628,7 @@ input#nis:focus {
 
 .kelas-item-compact.is-moving-up { z-index: 10; box-shadow: 0 6px 16px rgba(34, 197, 94, 0.35) !important; border-color: #22c55e !important; }
 .kelas-item-compact.is-moving-down { z-index: 10; box-shadow: 0 6px 16px rgba(239, 68, 68, 0.35) !important; border-color: #ef4444 !important; }
+
 .kelas-item-compact.attendance-pulse { animation: attendancePulse 650ms ease-out; }
 
 @keyframes attendancePulse {
@@ -714,9 +718,11 @@ body.effects-disabled .idle-container {
 
 .hof-inline-title { display: flex; align-items: center; justify-content: center; gap: 7px; flex-wrap: wrap; }
 .hof-main-label { font-size: 16px; font-weight: 800; color: #0f172a; }
+.hof-title-sep { color: #cbd5e1; font-weight: 400; }
 .hof-sub-label-box { flex-direction: column; display: flex; align-items: center; gap: 6px; font-size: 13px; }
 .hof-label-bold-black { font-weight: 800; color: #0f172a; }
 .hof-label-gray-date { font-weight: 600; color: #64748b; }
+.hof-rank1-inline { display: none !important; }
 
 .hof-3col-grid {
   flex: 1 1 auto; 
@@ -737,9 +743,9 @@ body.effects-disabled .idle-container {
 
 .hof-item-clean {
   display: grid;
-  grid-template-columns: 24px minmax(0, var(--hof-name-width, 24ch)) auto auto;
+  grid-template-columns: 24px minmax(0, var(--hof-name-width, 24ch)) 9ch 9ch;
   align-items: center;
-  column-gap: 8px;
+  column-gap: 4px;
   font-size: 13px;
   width: 100%; min-width: 0;
   white-space: nowrap;
@@ -747,7 +753,7 @@ body.effects-disabled .idle-container {
 
 .hof-num { font-weight: 800; color: #1e293b; font-size: 13px; text-align: right; padding-right: 2px; }
 .hof-name-bold { font-weight: 700; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-.hof-class-tag { font-weight: 600; color: #64748b; font-size: 12px; white-space: nowrap; }
+.hof-class-tag { font-weight: 600; color: #64748b; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hof-time-tag { font-weight: 800; color: #16a34a; font-size: 12px; white-space: nowrap; }
 
 .hall-of-fame-card.hof-compact-mode {
@@ -782,10 +788,11 @@ body.effects-disabled .idle-container {
 .hall-of-fame-card.hof-compact-mode .hof-item-clean {
   width: max-content;
   max-width: 100%;
-  grid-template-columns: 24px minmax(0, var(--hof-name-width, 24ch)) auto auto !important;
+  grid-template-columns: 24px minmax(0, var(--hof-name-width, 24ch)) 9ch 9ch;
 }
 
 .hof-empty { grid-column: 1 / -1; align-self: center; text-align: center; color: #94a3b8; font-size: 13px; font-weight: 600; }
+.hof-empty-inline { color: #94a3b8; font-size: 12px; font-weight: 600; }
 
 .hof-idle-state {
   width: min(620px, 100%); min-width: 0;
@@ -797,7 +804,6 @@ body.effects-disabled .idle-container {
 
 .hof-idle-copy { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 5px; }
 .hof-idle-state img { flex: 0 0 auto; width: min(150px, 28%); max-height: 100px; object-fit: contain; }
-
 .hall-of-fame-card.hof-idle-mode {
   justify-content: center; 
   align-items: center;
@@ -852,7 +858,7 @@ body.effects-disabled .idle-container {
   transform: scale(1);
 }
 
-/* Modal PIN Mode */
+/* PIN Mode: Compact & Proporsional */
 #settingsModal.pin-mode .settings-modal-box {
   width: min(360px, calc(100vw - 32px)) !important;
   max-width: 360px !important;
@@ -891,7 +897,7 @@ body.effects-disabled .idle-container {
   padding: 10px 16px !important;
 }
 
-/* Modal Form Settings Mode */
+/* Settings Form Mode: Clean & Ringkas */
 #settingsModal.settings-mode .settings-modal-box {
   width: min(600px, calc(100vw - 32px)) !important;
   max-width: 600px !important;
@@ -934,7 +940,9 @@ body.effects-disabled .idle-container {
   padding: 18px;
 }
 
-#settingsModal .settings-loading-overlay.active { display: flex; }
+#settingsModal .settings-loading-overlay.active {
+  display: flex;
+}
 
 #settingsModal .settings-modal-box.is-loading-state {
   background: transparent !important;
@@ -976,7 +984,7 @@ body.effects-disabled .idle-container {
   border-radius: 50%;
   width: 30px;
   height: 30px;
-  animation: spin 0.8s linear infinite;
+  animation: settingsLoadingSpin 0.8s linear infinite;
   margin: 0 auto;
 }
 
@@ -987,7 +995,9 @@ body.effects-disabled .idle-container {
   font-size: 14px;
 }
 
-/* Navigasi Tab Modal Utama & SubTab */
+@keyframes settingsLoadingSpin { to { transform: rotate(360deg); } }
+
+/* Navigation Tabs */
 .settings-main-tabs {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -998,23 +1008,22 @@ body.effects-disabled .idle-container {
   border-bottom: 2px solid #e2e8f0;
 }
 
-.settings-main-tabs .modal-tab-btn {
+.settings-main-tabs .tab-btn {
   width: 100%;
   min-width: 0;
-  padding: 10px 14px;
+  padding: 11px 8px;
   border: 1px solid #cbd5e1;
-  border-radius: 10px;
+  border-radius: 999px;
   background: #f1f5f9;
   color: #475569;
   font-weight: 700;
   white-space: nowrap;
   font-size: 13px;
-  cursor: pointer;
   transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
 }
 
-.settings-main-tabs .modal-tab-btn:hover { background: #e2e8f0; border-color: #94a3b8; }
-.settings-main-tabs .modal-tab-btn.active {
+.settings-main-tabs .tab-btn:hover { background: #e2e8f0; border-color: #94a3b8; }
+.settings-main-tabs .tab-btn.active {
   background: #A66F7A;
   color: #fff;
   border-color: #A66F7A;
@@ -1031,30 +1040,29 @@ body.effects-disabled .idle-container {
   background: #f7f8f6;
 }
 
-.settings-time-subtabs .modal-subtab-btn {
+.settings-time-subtabs .tab-btn {
   flex: 1 1 0;
-  padding: 8px 10px !important;
+  padding: 7px 6px !important;
   border: 1px solid transparent;
-  border-radius: 8px !important;
+  border-radius: 999px;
   background: #fff;
   color: #59665b;
   font-weight: 700;
-  font-size: 12px !important;
+  font-size: 11.5px !important;
   white-space: nowrap;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-  cursor: pointer;
-  transition: all 0.18s ease;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
 }
 
-.settings-time-subtabs .modal-subtab-btn:hover { border-color: #c9d8c4; background: #f3f7f1; }
-.settings-time-subtabs .modal-subtab-btn.active {
+.settings-time-subtabs .tab-btn:hover { border-color: #c9d8c4; background: #f3f7f1; }
+.settings-time-subtabs .tab-btn.active {
   background: #A66F7A;
   color: #fff;
   border: 1px solid #A66F7A;
   box-shadow: 0 2px 5px rgba(83, 126, 69, 0.18);
 }
 
-/* Area Scroll Modal */
+/* Scroll Area modal */
 #settingsModal .settings-scroll-area {
   flex: 0 1 auto;
   min-height: 0;
@@ -1121,7 +1129,7 @@ body.effects-disabled .idle-container {
   line-height: 1.6;
 }
 
-/* Tombol Modal & Footer */
+/* Modal Buttons & Footer */
 .btn-row { display: flex; gap: 10px; margin-top: 18px; }
 
 .btn-save {
@@ -1182,7 +1190,7 @@ body.effects-disabled .idle-container {
   padding: 10px 22px;
 }
 
-/* Component Switch ON/OFF (Pil Terracotta #dd9787) */
+/* Config Jam Switch Row */
 .config-jam-toggle-row {
   display: flex;
   align-items: center;
@@ -1198,6 +1206,9 @@ body.effects-disabled .idle-container {
 .config-jam-toggle-title { font-size: 13px; font-weight: 800; color: #26352a; }
 .config-jam-toggle-description { margin-top: 3px; font-size: 11px; line-height: 1.45; color: #64748b; }
 
+/* ==========================================================================
+   FORCE SWITCH ON/OFF BENTUK PIL (TERRACOTTA #dd9787)
+   ========================================================================== */
 .config-jam-switch {
   display: inline-flex !important;
   align-items: center !important;
@@ -1209,7 +1220,7 @@ body.effects-disabled .idle-container {
   background: #fff !important;
 }
 
-.config-jam-switch-option {
+button.config-jam-switch-option {
   min-width: 52px !important;
   height: 32px !important;
   padding: 0 14px !important;
@@ -1227,7 +1238,7 @@ body.effects-disabled .idle-container {
   transition: all 0.2s ease !important;
 }
 
-.config-jam-switch-option.is-selected {
+button.config-jam-switch-option.is-selected {
   background: #dd9787 !important;
   color: #ffffff !important;
   box-shadow: 0 2px 5px rgba(221, 151, 135, 0.4) !important;
@@ -1236,7 +1247,7 @@ body.effects-disabled .idle-container {
 .config-jam-switch-option:focus-visible { outline: 2px solid #A66F7A; outline-offset: 2px; }
 
 /* ==========================================================================
-   7. PROTECTION TAB STYLES
+   7. PROTECTION TAB STYLES (RINGKAS & COMPACT CHECKLIST)
    ========================================================================== */
 .protection-compact-header {
   display: flex;
@@ -1247,8 +1258,17 @@ body.effects-disabled .idle-container {
   border-bottom: 1px dashed #e2e8f0;
 }
 
-.protection-subheading { color: #64748b; font-size: 12px; font-weight: 700; }
-.protection-quick-links { display: flex; align-items: center; gap: 6px; }
+.protection-subheading {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.protection-quick-links {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
 
 .btn-text-action {
   background: transparent;
@@ -1260,11 +1280,27 @@ body.effects-disabled .idle-container {
   padding: 0;
 }
 
-.btn-text-action:hover { text-decoration: underline; color: #1d4ed8; }
-.btn-text-action:disabled { opacity: 0.5; cursor: not-allowed; text-decoration: none; }
-.action-sep { color: #cbd5e1; font-size: 11px; }
+.btn-text-action:hover {
+  text-decoration: underline;
+  color: #1d4ed8;
+}
 
-.protection-checklist-group { display: flex; flex-direction: column; gap: 6px; }
+.btn-text-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+.action-sep {
+  color: #cbd5e1;
+  font-size: 11px;
+}
+
+.protection-checklist-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
 
 .protection-check-row {
   display: flex;
@@ -1279,8 +1315,15 @@ body.effects-disabled .idle-container {
   font-size: 12px;
 }
 
-.protection-check-row:hover { background: #f1f5f9; border-color: #cbd5e1; }
-.protection-check-row:has(.protection-checkbox:checked) { background: #f0fdf4; border-color: #bbf7d0; }
+.protection-check-row:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.protection-check-row:has(.protection-checkbox:checked) {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
 
 .protection-check-row.is-disabled {
   opacity: 0.55 !important;
@@ -1296,9 +1339,23 @@ body.effects-disabled .idle-container {
   cursor: pointer;
 }
 
-.protection-checkbox:disabled { cursor: not-allowed; }
-.protection-label-title { font-weight: 700; color: #0f172a; white-space: nowrap; }
-.protection-label-desc { color: #64748b; font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.protection-checkbox:disabled {
+  cursor: not-allowed;
+}
+
+.protection-label-title {
+  font-weight: 700;
+  color: #0f172a;
+  white-space: nowrap;
+}
+
+.protection-label-desc {
+  color: #64748b;
+  font-size: 11.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 /* ==========================================================================
    8. EXPORT TAB STYLES
@@ -1328,8 +1385,19 @@ body.effects-disabled .idle-container {
   font-size: 30px;
 }
 
-.export-title { color: #0f172a; font-size: 17px; font-weight: 800; }
-.export-description { max-width: 440px; margin: 10px 0 20px; color: #64748b; font-size: 12px; line-height: 1.7; }
+.export-title {
+  color: #0f172a;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.export-description {
+  max-width: 440px;
+  margin: 10px 0 20px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.7;
+}
 
 .btn-backup {
   width: 100%;
@@ -1345,11 +1413,18 @@ body.effects-disabled .idle-container {
   transition: all 0.2s ease;
 }
 
-.btn-backup:hover { background: #fef9c3; }
-.export-backup-button { width: auto; max-width: 100%; padding: 12px 20px; }
+.btn-backup:hover {
+  background: #fef9c3;
+}
+
+.export-backup-button {
+  width: auto;
+  max-width: 100%;
+  padding: 12px 20px;
+}
 
 /* ==========================================================================
-   9. TOAST NOTIFICATION & CUSTOM ALERTS
+   9. CLASSIFIED TOAST NOTIFICATION (UI MODERN)
    ========================================================================== */
 #appToast {
   position: fixed;
@@ -1400,9 +1475,25 @@ body.effects-disabled .idle-container {
 #appToast[data-type="info"] .toast-icon-bg { background: #3b82f6; }
 #appToast[data-type="warning"] .toast-icon-bg { background: #f59e0b; }
 
-.toast-content { flex: 1; display: flex; flex-direction: column; gap: 2px; }
-.toast-title { font-size: 13px; font-weight: 700; color: #1e293b; }
-.toast-message { font-size: 12px; font-weight: 500; color: #64748b; line-height: 1.35; }
+.toast-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.toast-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.toast-message {
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+  line-height: 1.35;
+}
 
 .toast-close-btn {
   background: transparent;
@@ -1414,7 +1505,10 @@ body.effects-disabled .idle-container {
   line-height: 1;
   transition: color 0.2s;
 }
-.toast-close-btn:hover { color: #475569; }
+
+.toast-close-btn:hover {
+  color: #475569;
+}
 
 #customAlertModal { padding: 20px; }
 #customAlertModal .settings-modal-box {
@@ -1433,19 +1527,6 @@ body.effects-disabled .idle-container {
 /* ==========================================================================
    10. RESPONSIVE & MEDIA QUERIES
    ========================================================================== */
-@media (min-width: 769px) {
-  #scanArea.dashboard-container {
-    grid-auto-rows: minmax(0, 1fr);
-  }
-}
-
-@media (max-width: 1100px) {
-  #scanArea .jurusan-card-fixed .rekap-grid,
-  #scanArea .jurusan-card-fixed .jurusan-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
 @media (max-height: 720px) {
   body { padding-bottom: 12px; }
   #scanArea.dashboard-container {
@@ -1471,7 +1552,7 @@ body.effects-disabled .idle-container {
   }
   
   #scanArea > .scanner-card-fixed,
-  #scanArea > .jurusan-card-fixed { min-height: 360px; height: auto !important; }
+  #scanArea > .jurusan-card-fixed { min-height: 360px; }
 
   #scanArea > .hall-of-fame-card { grid-column: 1; min-height: 190px !important; flex-direction: column; gap: 10px; }
   .hof-top-header { flex: 0 0 auto; width: 100%; border-right: 0; border-bottom: 1px solid #e2e8f0; padding: 0 0 8px; }
@@ -1484,13 +1565,13 @@ body.effects-disabled .idle-container {
     justify-content: stretch; gap: 7px 12px; margin-inline: 0;
   }
   
-  .hof-item-clean { grid-template-columns: 22px minmax(0, var(--hof-name-width, 24ch)) auto auto; column-gap: 4px; font-size: 12px; }
-  .hof-class-tag, .hof-time-tag { font-size: 11px; }
+  .hof-item-clean { grid-template-columns: 22px minmax(0, var(--hof-name-width, 24ch)) 9ch 9ch; column-gap: 4px; font-size: 12px; }
+  .hof-class-tag, .hof-time-tag { font-size: 11px; width: 9ch; }
   
   .hall-of-fame-card.hof-compact-mode { align-items: stretch; flex-direction: row; gap: 10px; }
   .hall-of-fame-card.hof-compact-mode .hof-top-header { width: 34%; max-width: none; flex: 0 0 34%; border-right: 1px solid #e2e8f0; border-bottom: 0; padding: 0 8px 0 0; }
   .hall-of-fame-card.hof-compact-mode .hof-3col-grid { flex: 1 1 auto; width: auto; }
-  .hall-of-fame-card.hof-compact-mode .hof-item-clean { grid-template-columns: 20px minmax(0, var(--hof-name-width, 24ch)) auto auto; }
+  .hall-of-fame-card.hof-compact-mode .hof-item-clean { grid-template-columns: 20px minmax(0, var(--hof-name-width, 24ch)) 9ch 9ch; }
   
   #scanArea > .jurusan-card-fixed { justify-content: flex-start; }
 }
@@ -1514,7 +1595,7 @@ body.effects-disabled .idle-container {
   #settingsModal .settings-fields-grid { grid-template-columns: minmax(0, 1fr); gap: 0; }
   #settingsModal .settings-scroll-area { max-height: calc(92dvh - 245px); padding-right: 5px; }
   #settingsModal .settings-main-tabs { gap: 5px; }
-  #settingsModal .settings-main-tabs .modal-tab-btn { padding: 10px 4px; font-size: 11px; }
+  #settingsModal .settings-main-tabs .tab-btn { padding: 10px 4px; font-size: 11px; }
   
   #settingsModal .settings-footer .btn-cancel,
   #settingsModal .settings-footer .btn-save,
@@ -1526,7 +1607,7 @@ body.effects-disabled .idle-container {
   
   .settings-title { font-size: 16px; }
   .settings-time-subtabs { gap: 4px; }
-  .settings-time-subtabs .modal-subtab-btn { padding: 9px 3px; font-size: 10px; }
+  .settings-time-subtabs .tab-btn { padding: 9px 3px; font-size: 10px; }
   
   .protection-checklist-group { gap: 6px; }
   .protection-check-row { padding: 8px 10px; }
@@ -1544,6 +1625,8 @@ body.effects-disabled .idle-container {
     padding: 22px 18px 18px !important;
   }
   
+  .settings-tab-menu .tab-btn { padding: 8px 10px; font-size: 11px; }
+  
   .config-jam-toggle-row { align-items: flex-start; }
   .config-jam-switch-option { min-width: 42px; padding: 7px 9px; }
   .scanner-config-indicators { gap: 4px; }
@@ -1560,3 +1643,153 @@ body.effects-disabled .idle-container {
   body.effects-enabled .mini-bar-fill { transition-duration: 0.01ms !important; }
   body.effects-enabled .kelas-item-compact.attendance-pulse { animation-duration: 0.01ms !important; }
 }
+
+/* =========================================================
+   FIX: TINGGI CONTAINER SCAN & REKAP HARUS SEIMBANG
+   ========================================================= */
+#scanArea.dashboard-container {
+  align-items: stretch;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+#scanArea > .scanner-card-fixed,
+#scanArea > .jurusan-card-fixed {
+  height: 100% !important;
+  min-height: 0 !important;
+  align-self: stretch;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+@media (min-width: 769px) {
+  #scanArea.dashboard-container {
+    grid-auto-rows: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  #scanArea > .scanner-card-fixed,
+  #scanArea > .jurusan-card-fixed {
+    height: auto !important;
+    min-height: 0;
+  }
+}
+
+/* =========================================================
+   FIX ZOOM: CARD REKAP TIDAK BOLEH TUBRUKAN
+   ========================================================= */
+#scanArea > .jurusan-card-fixed {
+  min-width: 0;
+  overflow: hidden;
+}
+
+#scanArea .jurusan-card-fixed .rekap-grid,
+#scanArea .jurusan-card-fixed .jurusan-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+#scanArea .jurusan-card-fixed .rekap-grid > *,
+#scanArea .jurusan-card-fixed .jurusan-grid > * {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1100px) {
+  #scanArea .jurusan-card-fixed .rekap-grid,
+  #scanArea .jurusan-card-fixed .jurusan-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* CLASS KHUSUS TAB MODAL PENGATURAN */
+.settings-main-tabs .modal-tab-btn {
+  width: 100%;
+  min-width: 0;
+  padding: 10px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #f1f5f9;
+  color: #475569;
+  font-weight: 700;
+  white-space: nowrap;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+
+.settings-main-tabs .modal-tab-btn:hover {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+}
+
+.settings-main-tabs .modal-tab-btn.active {
+  background: #A66F7A;
+  color: #fff;
+  border-color: #A66F7A;
+  box-shadow: 0 2px 6px rgba(83, 126, 69, 0.2);
+}
+
+/* REVISI SUBTAB & SWITCH ON/OFF */
+.settings-time-subtabs .modal-subtab-btn {
+  flex: 1 1 0;
+  padding: 8px 10px !important;
+  border: 1px solid transparent;
+  border-radius: 8px !important;
+  background: #fff;
+  color: #59665b;
+  font-weight: 700;
+  font-size: 12px !important;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.settings-time-subtabs .modal-subtab-btn:hover {
+  border-color: #c9d8c4;
+  background: #f3f7f1;
+}
+
+.settings-time-subtabs .modal-subtab-btn.active {
+  background: #A66F7A;
+  color: #fff;
+  border: 1px solid #A66F7A;
+  box-shadow: 0 2px 5px rgba(83, 126, 69, 0.18);
+}
+
+.config-jam-switch-option {
+  min-width: 48px;
+  padding: 6px 14px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: #718071;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.config-jam-switch-option.is-selected {
+  background: #dd9787 !important;
+  color: #fff !important;
+  border-color: #dd9787 !important;
+  box-shadow: 0 1px 3px rgba(221, 151, 135, 0.3) !important;
+}
+
+#scanStudentClass {
+  white-space: normal !important;
+  word-break: break-word;
+  overflow: visible !important;
+  text-overflow: unset !important;
+  line-height: 1.3;
+}
+
