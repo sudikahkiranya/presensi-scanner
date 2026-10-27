@@ -352,13 +352,25 @@ input#nis:focus {
   object-fit: contain;
   display: block;
   margin: 0 auto 10px auto !important;
-  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.08));
-  animation: floatingLogo 3.5s infinite ease-in-out;
+  
+  /* Posisi tetap diam (transform dimatikan) */
+  transform: none !important;
+  
+  /* Efek Kilau PINGGIRAN Bernapas yang Halus */
+  animation: breathingLogoGlow 3.5s infinite ease-in-out;
 }
 
-@keyframes floatingLogo {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-8px); }
+@keyframes breathingLogoGlow {
+  0%, 100% {
+    /* Cahaya kilau biru tipis/lembut */
+    filter: drop-shadow(0 0 8px rgba(37, 99, 235, 0.35)) 
+            drop-shadow(0 4px 12px rgba(0, 0, 0, 0.06));
+  }
+  50% {
+    /* Cahaya kilau membesar dan makin terang */
+    filter: drop-shadow(0 0 22px rgba(37, 99, 235, 0.8)) 
+            drop-shadow(0 0 35px rgba(59, 130, 246, 0.5));
+  }
 }
 
 .idle-date-text {
