@@ -995,7 +995,7 @@ function loadProtectionSettings(onComplete) {
 
   runGasApi("scannerGetProtectionSettings")
     .then(result => {
-      // Prioritas 1: Server GAS | Prioritas 2: LocalStorage | Prioritas 3: Default ON (semua true)
+      // 1. Prioritas Baca Data: Server GAS -> LocalStorage -> Default ON (True)
       let serverConfig = (result && result.success && result.config) ? result.config : null;
 
       if (!serverConfig || Object.keys(serverConfig).length === 0) {
@@ -1004,7 +1004,6 @@ function loadProtectionSettings(onComplete) {
         } catch (e) {}
       }
 
-      // Pastikan jika data belum pernah disimpan, SEMUA item bernilai true (ON) secara default
       const finalConfig = {
         manualInput: serverConfig && serverConfig.manualInput !== undefined ? !!serverConfig.manualInput : true,
         autoDelete: serverConfig && serverConfig.autoDelete !== undefined ? !!serverConfig.autoDelete : true,
@@ -1013,7 +1012,7 @@ function loadProtectionSettings(onComplete) {
         clipboardShortcut: serverConfig && serverConfig.clipboardShortcut !== undefined ? !!serverConfig.clipboardShortcut : true
       };
 
-      // 1. ISIKAN STATUS CHECKBOX KE HTML
+      // 2. ISIKAN STATUS CENTANG KE HTML
       const ids = {
         manualInput: "cfgProtectManualInput",
         autoDelete: "cfgProtectAutoDelete",
@@ -1024,44 +1023,26 @@ function loadProtectionSettings(onComplete) {
 
       Object.keys(ids).forEach(function(key) {
         const el = document.getElementById(ids[key]);
-        if (el) el.checked = finalConfig[key] === true;
+        if (el) el.checked = (finalConfig[key] === true);
       });
 
-      // 2. SIMPAN & WAPPERKAN KE GLOBAL STATE SCANNER
+      // 3. TERAPKAN KE SCANNER & DISIMPAN KE LOCALSTORAGE
       applyScannerProtectionSettings(finalConfig);
       localStorage.setItem("scanner_protection_config", JSON.stringify(finalConfig));
 
-      // 3. PAKSA UI SWITCH (OFF/ON) MENYESUAIKAN STATUS CHECKBOX SECARA LANGSUNG
-      updateProtectionStatusUI();
-
+      // 4. SELESAIKAN LOADING SEBELUM UPDATE SWITCH UI
       if (typeof onComplete === "function") {
         onComplete();
       } else {
         hideSettingsLoading(true);
       }
+
+      // Update warna tombol Switch ON/OFF setelah DOM aktif
+      setTimeout(updateProtectionStatusUI, 50);
     })
     .catch(err => { 
       hideSettingsLoading(true); 
       console.error("Gagal memuat konfigurasi proteksi", err);
-
-      // Fallback jika koneksi RTO: Paksa Centang Berdasarkan Cache Lokal / Default ON
-      const cached = JSON.parse(localStorage.getItem("scanner_protection_config") || "{}");
-      const fallbackConfig = {
-        manualInput: cached.manualInput !== undefined ? !!cached.manualInput : true,
-        autoDelete: cached.autoDelete !== undefined ? !!cached.autoDelete : true,
-        paste: cached.paste !== undefined ? !!cached.paste : true,
-        dragDrop: cached.dragDrop !== undefined ? !!cached.dragDrop : true,
-        clipboardShortcut: cached.clipboardShortcut !== undefined ? !!cached.clipboardShortcut : true
-      };
-
-      ["cfgProtectManualInput", "cfgProtectAutoDelete", "cfgProtectPaste", "cfgProtectDragDrop", "cfgProtectClipboardShortcut"].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.checked = true;
-      });
-
-      applyScannerProtectionSettings(fallbackConfig);
-      updateProtectionStatusUI();
-
       if (typeof onComplete === "function") onComplete();
     });
 }
