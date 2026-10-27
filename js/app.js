@@ -446,7 +446,9 @@ input.addEventListener("keydown", function(e) {
 
       const now = new Date();
       const time = now.toTimeString().split(' ')[0]; 
-      const statusInfo = calculateScanStatus(now, tingkat);
+      
+      // PERBAIKAN DI BARIS INI: Kirim rawStudentData sebagai argumen ke-3
+      const statusInfo = calculateScanStatus(now, tingkat, rawStudentData);
 
       showSuccess(nis, name, kelas, tingkat, time, photo, statusInfo);
       input.value = "";
@@ -472,7 +474,7 @@ input.addEventListener("keydown", function(e) {
   }
 });
 
-function calculateScanStatus(nowDate, tingkatSiswa) {
+function calculateScanStatus(nowDate, tingkatSiswa, rawStudentObj) {
   const jam = String(nowDate.getHours()).padStart(2, '0');
   const menit = String(nowDate.getMinutes()).padStart(2, '0');
   const timeStr = `${jam}:${menit}`;
@@ -489,7 +491,13 @@ function calculateScanStatus(nowDate, tingkatSiswa) {
   let jMasuk = "06:45";
   let jPulang = "11:00";
 
-  if (activeConfig) {
+  // PRIORITAS 1: Pakai Jam Khusus Personal jika ada (dari Master Temporer)
+  if (rawStudentObj && rawStudentObj.jamMasukKhusus && rawStudentObj.jamPulangKhusus) {
+    jMasuk = rawStudentObj.jamMasukKhusus;
+    jPulang = rawStudentObj.jamPulangKhusus;
+  } 
+  // PRIORITAS 2: Pakai Config Jam Harian / Per Tingkat
+  else if (activeConfig) {
     if (activeConfig.default) {
       jMasuk = activeConfig.default.jamMasuk || jMasuk;
       jPulang = activeConfig.default.jamPulang || jPulang;
