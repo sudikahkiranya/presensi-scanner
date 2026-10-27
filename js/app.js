@@ -944,11 +944,17 @@ function loadProtectionSettings(onComplete) {
 
   runGasApi("scannerGetProtectionSettings")
     .then(result => {
-      // Jika dari backend kosong/gagal, fallback ke TRUE semua
-      const config = result && result.success && result.config && Object.keys(result.config).length > 0 
-        ? result.config 
-        : { manualInput: true, autoDelete: true, paste: true, dragDrop: true, clipboardShortcut: true };
+      // Baca config dari server, jika kosong/kosong properti gunakan window.scannerProtectionConfig atau default true
+      const serverConfig = (result && result.success && result.config) ? result.config : {};
       
+      const config = {
+        manualInput: serverConfig.manualInput !== undefined ? serverConfig.manualInput : (window.scannerProtectionConfig.manualInput ?? true),
+        autoDelete: serverConfig.autoDelete !== undefined ? serverConfig.autoDelete : (window.scannerProtectionConfig.autoDelete ?? true),
+        paste: serverConfig.paste !== undefined ? serverConfig.paste : (window.scannerProtectionConfig.paste ?? true),
+        dragDrop: serverConfig.dragDrop !== undefined ? serverConfig.dragDrop : (window.scannerProtectionConfig.dragDrop ?? true),
+        clipboardShortcut: serverConfig.clipboardShortcut !== undefined ? serverConfig.clipboardShortcut : (window.scannerProtectionConfig.clipboardShortcut ?? true)
+      };
+
       const ids = {
         manualInput: "cfgProtectManualInput",
         autoDelete: "cfgProtectAutoDelete",
@@ -959,7 +965,7 @@ function loadProtectionSettings(onComplete) {
 
       Object.keys(ids).forEach(function(key) {
         const el = document.getElementById(ids[key]);
-        if (el) el.checked = config[key] !== false; // Default ke true jika undefined
+        if (el) el.checked = config[key] === true;
       });
 
       applyScannerProtectionSettings(config);
