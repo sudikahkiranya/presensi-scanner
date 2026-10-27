@@ -1367,10 +1367,7 @@ function renderJurusanUI() {
     const namaKelas = String(s.class).trim();
     let tingkat = String(s.tingkat || "").trim().toUpperCase();
 
-    // Cek apakah siswa ini punya jadwal/akses khusus (misal dari master temporer)
     const hasCustomSchedule = !!(s.jamMasukKhusus || s.jamPulangKhusus);
-
-    // Buka filter jika siswa punya jadwal khusus, jalankan pengecekan level jika reguler
     if (!hasCustomSchedule && !isLevelAllowed(s.tingkat, s.class)) return;
 
     if (!tingkat || tingkat === "UNDEFINED") {
@@ -1381,7 +1378,7 @@ function renderJurusanUI() {
     }
 
     if (!rekapMap[namaKelas]) {
-      rekapMap[namaKelas] = { total: 0, hadir: 0, tingkat: tingkat, lastScanTime: 0 };
+      rekapMap[namaKelas] = { total: 0, hadir: 0, tingkat: tingkat, lastScanTime: 0, isCustom: hasCustomSchedule };
     }
 
     rekapMap[namaKelas].total += 1;
@@ -1407,7 +1404,6 @@ function renderJurusanUI() {
     }
   });
 
-  // OBJEK GROUPING DINAMIS (Tidak ada hardcoded TKA)
   const groupedByTingkat = {};
 
   Object.keys(rekapMap).forEach(kName => {
@@ -1415,36 +1411,40 @@ function renderJurusanUI() {
     if (item.hadir === 0) return;
 
     const percent = item.total > 0 ? (item.hadir / item.total) * 100 : 0;
-    const tKey = item.tingkat || "LAINNYA";
+    
+    let groupKey = item.tingkat || "LAINNYA";
+    let namaLabBersih = kName;
 
-    if (!groupedByTingkat[tKey]) {
-      groupedByTingkat[tKey] = [];
+    // Deteksi nomor Sesi untuk auto-grouping
+    const matchSesi = kName.match(/sesi\s*(\d+|[a-z]+)/i);
+    if (matchSesi) {
+      const sesiNum = matchSesi[1];
+      groupKey = `${item.tingkat} - Sesi ${sesiNum}`;
+      
+      // Bersihkan teks kelas/ruang (menjadi "LAB KOMP 7" / "LAB VR")
+      namaLabBersih = kName
+        .replace(/[-\s]*tka[-\s]*/i, " ")
+        .replace(/[-\s]*sesi\s*(\d+|[a-z]+)/i, "")
+        .trim();
     }
 
-    const sampleStudent = Object.values(students).find(s => s && String(s.class || "").trim() === kName);
-    
-    // PEMBERSIHAN TEKS DISPLAY AGAR RAPI DI REKAP:
-    let namaKelasTampilan = sampleStudent ? formatNamaKelas(String(sampleStudent.class || "").trim(), item.tingkat) : kName;
-    
-    // Jika mengandung kata "SESI", rapikan formatnya agar tidak panjang memakan tempat
-    if (/sesi/i.test(namaKelasTampilan)) {
-      namaKelasTampilan = namaKelasTampilan
-        .replace(/TKA-SESI\s*/i, "Sesi ")
-        .replace(/SESI-/i, "Sesi ");
+    if (!groupedByTingkat[groupKey]) {
+      groupedByTingkat[groupKey] = [];
     }
 
-    groupedByTingkat[tKey].push({
+    groupedByTingkat[groupKey].push({
       namaKelas: kName,
-      namaKelasTampilan: namaKelasTampilan || kName,
+      namaKelasTampilan: namaLabBersih || kName,
       total: item.total,
       hadir: item.hadir,
       percent: percent,
       percentRounded: Math.round(percent),
-      lastScanTime: item.lastScanTime
+      lastScanTime: item.lastScanTime,
+      isCustom: item.isCustom || !["X", "XI", "XII"].includes(item.tingkat)
     });
   });
 
-  // SORTING URUTAN KEHADIRAN PER TINGKAT
+  // SORTING URUTAN KEHADIRAN
   Object.keys(groupedByTingkat).forEach(tKat => {
     groupedByTingkat[tKat].sort((a, b) => {
       if (b.percentRounded !== a.percentRounded) return b.percentRounded - a.percentRounded;
@@ -1458,24 +1458,22 @@ function renderJurusanUI() {
   let htmlContent = "";
   let hasData = false;
 
-  // URUTAN TAMPILAN: Utamakan Reguler (X, XI, XII), sisanya (TKA, UTBK, Dll) menyusul dinamis
   const priorityOrder = ["X", "XI", "XII"];
   const dynamicKeys = Object.keys(groupedByTingkat).filter(k => !priorityOrder.includes(k));
+  dynamicKeys.sort((a, b) => a.localeCompare(b, "id", { numeric: true }));
+
   const displayLevels = [...priorityOrder, ...dynamicKeys];
 
   displayLevels.forEach(tKat => {
     const listKelas = groupedByTingkat[tKat];
     if (!listKelas || listKelas.length === 0) return;
 
-    // Pengecekan filter level hanya untuk tingkat reguler (X, XI, XII)
     if (priorityOrder.includes(tKat) && !isLevelAllowed(tKat, "")) return;
 
     hasData = true;
 
-    // JUDUL HEADER DINAMIS
-    const titleHeader = priorityOrder.includes(tKat) 
-      ? `Rekap Kelas ${tKat}` 
-      : `Rekap ${tKat.includes("SESI") ? tKat : "Sesi " + tKat}`;
+    const isReguler = priorityOrder.includes(tKat);
+    const titleHeader = isReguler ? `Rekap Kelas ${tKat}` : `Rekap ${tKat}`;
 
     htmlContent += `
       <div class="tingkat-column">
@@ -1488,8 +1486,9 @@ function renderJurusanUI() {
       if (k.percentRounded >= 85) colorClass = "high";
       else if (k.percentRounded < 50) colorClass = "low";
 
+      // HANYA PASANG MEDALI UNTUK KELAS REGULER (X, XI, XII):
       let medalIcon = "";
-      if (k.percentRounded > 0) {
+      if (isReguler && k.percentRounded > 0) {
         if (index === 0) medalIcon = " 🥇";
         else if (index === 1) medalIcon = " 🥈";
         else if (index === 2) medalIcon = " 🥉";
