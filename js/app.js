@@ -834,6 +834,10 @@ function openSettingsModal() {
 function closeSettingsModal() {
   hideSettingsLoading(true);
   document.getElementById("settingsModal").classList.remove("active");
+  
+  // Refresh indikator sesuai config yang benar-benar tersimpan
+  updateConfigIndicators();
+  
   setTimeout(() => { input.focus(); }, 200);
 }
 
@@ -940,9 +944,11 @@ function loadProtectionSettings(onComplete) {
 
   runGasApi("scannerGetProtectionSettings")
     .then(result => {
-      const config = result && result.success && result.config ? result.config : {
-        manualInput: true, autoDelete: true, paste: true, dragDrop: true, clipboardShortcut: true
-      };
+      // Jika dari backend kosong/gagal, fallback ke TRUE semua
+      const config = result && result.success && result.config && Object.keys(result.config).length > 0 
+        ? result.config 
+        : { manualInput: true, autoDelete: true, paste: true, dragDrop: true, clipboardShortcut: true };
+      
       const ids = {
         manualInput: "cfgProtectManualInput",
         autoDelete: "cfgProtectAutoDelete",
@@ -950,12 +956,14 @@ function loadProtectionSettings(onComplete) {
         dragDrop: "cfgProtectDragDrop",
         clipboardShortcut: "cfgProtectClipboardShortcut"
       };
+
       Object.keys(ids).forEach(function(key) {
         const el = document.getElementById(ids[key]);
-        if (el) el.checked = config[key] !== false;
+        if (el) el.checked = config[key] !== false; // Default ke true jika undefined
       });
-      updateProtectionStatusUI();
+
       applyScannerProtectionSettings(config);
+      updateProtectionStatusUI();
 
       if (typeof onComplete === "function") {
         onComplete();
@@ -2036,6 +2044,14 @@ setInterval(updateConfigIndicators, 60000);
 
 try {
   const cachedProtection = JSON.parse(localStorage.getItem("scanner_protection_config") || "null");
-  if (cachedProtection) applyScannerProtectionSettings(cachedProtection);
-  else updateConfigIndicators();
-} catch (_) { updateConfigIndicators(); }
+  if (cachedProtection) {
+    applyScannerProtectionSettings(cachedProtection);
+  } else {
+    // Default ON jika belum ada cache
+    applyScannerProtectionSettings({
+      manualInput: true, autoDelete: true, paste: true, dragDrop: true, clipboardShortcut: true
+    });
+  }
+} catch (_) { 
+  updateConfigIndicators(); 
+}
