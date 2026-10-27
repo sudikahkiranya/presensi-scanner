@@ -1406,43 +1406,51 @@ function renderJurusanUI() {
 
   const groupedByTingkat = {};
 
-  Object.keys(rekapMap).forEach(kName => {
-    const item = rekapMap[kName];
-    if (item.hadir === 0) return;
+  // KODE BARU (FIX NAMA KELAS HUMAN-READABLE):
+Object.keys(rekapMap).forEach(kName => {
+  const item = rekapMap[kName];
+  if (item.hadir === 0) return;
 
-    const percent = item.total > 0 ? (item.hadir / item.total) * 100 : 0;
+  const percent = item.total > 0 ? (item.hadir / item.total) * 100 : 0;
+  
+  let groupKey = item.tingkat || "LAINNYA";
+  
+  // 1. CARI SAMPLE STUDENT UNTUK REKAP
+  const sampleStudent = Object.values(students).find(s => s && String(s.class || "").trim() === kName);
+  
+  // 2. CONVERT ID KELAS JADI NAMA CANTIK (Contoh: "FAR-A26" -> "X FAR 1")
+  let namaLabBersih = sampleStudent 
+    ? formatNamaKelas(String(sampleStudent.class || "").trim(), item.tingkat) 
+    : formatNamaKelas(kName, item.tingkat);
+
+  // Deteksi nomor Sesi untuk auto-grouping khusus temporer/lab
+  const matchSesi = kName.match(/sesi\s*(\d+|[a-z]+)/i);
+  if (matchSesi) {
+    const sesiNum = matchSesi[1];
+    groupKey = `${item.tingkat} - Sesi ${sesiNum}`;
     
-    let groupKey = item.tingkat || "LAINNYA";
-    let namaLabBersih = kName;
+    // Bersihkan teks kelas/ruang jika ada kata Sesi/TKA
+    namaLabBersih = kName
+      .replace(/[-\s]*tka[-\s]*/i, " ")
+      .replace(/[-\s]*sesi\s*(\d+|[a-z]+)/i, "")
+      .trim();
+  }
 
-    // Deteksi nomor Sesi untuk auto-grouping
-    const matchSesi = kName.match(/sesi\s*(\d+|[a-z]+)/i);
-    if (matchSesi) {
-      const sesiNum = matchSesi[1];
-      groupKey = `${item.tingkat} - Sesi ${sesiNum}`;
-      
-      // Bersihkan teks kelas/ruang (menjadi "LAB KOMP 7" / "LAB VR")
-      namaLabBersih = kName
-        .replace(/[-\s]*tka[-\s]*/i, " ")
-        .replace(/[-\s]*sesi\s*(\d+|[a-z]+)/i, "")
-        .trim();
-    }
+  if (!groupedByTingkat[groupKey]) {
+    groupedByTingkat[groupKey] = [];
+  }
 
-    if (!groupedByTingkat[groupKey]) {
-      groupedByTingkat[groupKey] = [];
-    }
-
-    groupedByTingkat[groupKey].push({
-      namaKelas: kName,
-      namaKelasTampilan: namaLabBersih || kName,
-      total: item.total,
-      hadir: item.hadir,
-      percent: percent,
-      percentRounded: Math.round(percent),
-      lastScanTime: item.lastScanTime,
-      isCustom: item.isCustom || !["X", "XI", "XII"].includes(item.tingkat)
-    });
+  groupedByTingkat[groupKey].push({
+    namaKelas: kName,
+    namaKelasTampilan: namaLabBersih || kName,
+    total: item.total,
+    hadir: item.hadir,
+    percent: percent,
+    percentRounded: Math.round(percent),
+    lastScanTime: item.lastScanTime,
+    isCustom: item.isCustom || !["X", "XI", "XII"].includes(item.tingkat)
   });
+});
 
   // SORTING URUTAN KEHADIRAN
   Object.keys(groupedByTingkat).forEach(tKat => {
