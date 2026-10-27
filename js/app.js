@@ -995,17 +995,25 @@ function loadProtectionSettings(onComplete) {
 
   runGasApi("scannerGetProtectionSettings")
     .then(result => {
-      // Baca config dari server, jika kosong/kosong properti gunakan window.scannerProtectionConfig atau default true
-      const serverConfig = (result && result.success && result.config) ? result.config : {};
-      
-      const config = {
-        manualInput: serverConfig.manualInput !== undefined ? serverConfig.manualInput : (window.scannerProtectionConfig.manualInput ?? true),
-        autoDelete: serverConfig.autoDelete !== undefined ? serverConfig.autoDelete : (window.scannerProtectionConfig.autoDelete ?? true),
-        paste: serverConfig.paste !== undefined ? serverConfig.paste : (window.scannerProtectionConfig.paste ?? true),
-        dragDrop: serverConfig.dragDrop !== undefined ? serverConfig.dragDrop : (window.scannerProtectionConfig.dragDrop ?? true),
-        clipboardShortcut: serverConfig.clipboardShortcut !== undefined ? serverConfig.clipboardShortcut : (window.scannerProtectionConfig.clipboardShortcut ?? true)
+      // Ambil config dari Server, jika kosong fallback ke localStorage / Default ON
+      let serverConfig = (result && result.success && result.config) ? result.config : null;
+
+      if (!serverConfig || Object.keys(serverConfig).length === 0) {
+        try {
+          serverConfig = JSON.parse(localStorage.getItem("scanner_protection_config") || "null");
+        } catch (e) {}
+      }
+
+      // Default jika server maupun localStorage belum punya data (semua bernilai true)
+      const finalConfig = {
+        manualInput: serverConfig && serverConfig.manualInput !== undefined ? !!serverConfig.manualInput : true,
+        autoDelete: serverConfig && serverConfig.autoDelete !== undefined ? !!serverConfig.autoDelete : true,
+        paste: serverConfig && serverConfig.paste !== undefined ? !!serverConfig.paste : true,
+        dragDrop: serverConfig && serverConfig.dragDrop !== undefined ? !!serverConfig.dragDrop : true,
+        clipboardShortcut: serverConfig && serverConfig.clipboardShortcut !== undefined ? !!serverConfig.clipboardShortcut : true
       };
 
+      // Set centang pada elemen checkbox HTML
       const ids = {
         manualInput: "cfgProtectManualInput",
         autoDelete: "cfgProtectAutoDelete",
@@ -1016,10 +1024,12 @@ function loadProtectionSettings(onComplete) {
 
       Object.keys(ids).forEach(function(key) {
         const el = document.getElementById(ids[key]);
-        if (el) el.checked = config[key] === true;
+        if (el) el.checked = finalConfig[key] === true;
       });
 
-      applyScannerProtectionSettings(config);
+      // Simpan ke Single Source Of Truth FE
+      applyScannerProtectionSettings(finalConfig);
+      localStorage.setItem("scanner_protection_config", JSON.stringify(finalConfig));
       updateProtectionStatusUI();
 
       if (typeof onComplete === "function") {
@@ -1040,6 +1050,7 @@ function saveProtectionSettings() {
     showToast("Hanya Super Admin yang dapat menyimpan proteksi.", "warning");
     return false;
   }
+  
   const config = {
     manualInput: !!document.getElementById("cfgProtectManualInput")?.checked,
     autoDelete: !!document.getElementById("cfgProtectAutoDelete")?.checked,
@@ -1047,6 +1058,7 @@ function saveProtectionSettings() {
     dragDrop: !!document.getElementById("cfgProtectDragDrop")?.checked,
     clipboardShortcut: !!document.getElementById("cfgProtectClipboardShortcut")?.checked
   };
+
   showSettingsLoading("Menyimpan konfigurasi proteksi...");
 
   runGasApi("scannerSaveProtectionSettings", { config, token: window.settingsAdminToken })
@@ -1056,6 +1068,8 @@ function saveProtectionSettings() {
         showToast((result && result.message) || "Gagal menyimpan proteksi.", "error"); 
         return; 
       }
+
+      // Update 1 Sumber Utama di Browser
       localStorage.setItem("scanner_protection_config", JSON.stringify(config));
       applyScannerProtectionSettings(config);
       updateProtectionStatusUI();
@@ -2158,19 +2172,21 @@ document.addEventListener("visibilitychange", function() {
 });
 setInterval(updateConfigIndicators, 60000);
 
-try {
-  const cachedProtection = JSON.parse(localStorage.getItem("scanner_protection_config") || "null");
-  if (cachedProtection) {
-    applyScannerProtectionSettings(cachedProtection);
-  } else {
-    // Default ON jika belum ada cache
-    applyScannerProtectionSettings({
-      manualInput: true, autoDelete: true, paste: true, dragDrop: true, clipboardShortcut: true
-    });
+// SINKRONISASI 1 SUMBER UTAMA SAAT APLIKASI PERTAMA DI-LOAD
+(function initGlobalProtectionState() {
+  try {
+    const cached = JSON.parse(localStorage.getItem("scanner_protection_config") || "null");
+    if (cached) {
+      applyScannerProtectionSettings(cached);
+    } else {
+      applyScannerProtectionSettings({
+        manualInput: true, autoDelete: true, paste: true, dragDrop: true, clipboardShortcut: true
+      });
+    }
+  } catch (_) { 
+    updateConfigIndicators(); 
   }
-} catch (_) { 
-  updateConfigIndicators(); 
-}
+})();
 
 // Function ekstraksi warna dominan dari image logo/foto
 function applyDominanGlow(imgElement) {
