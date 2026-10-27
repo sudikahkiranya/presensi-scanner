@@ -285,7 +285,22 @@ function loadStudents() {
         setTimeout(autoSyncIfOnline, 2000);
       }, 300);
 
-      console.log(`✅ Data siswa berhasil dimuat: ${Object.keys(students).length} siswa`);
+      // RINCIAN LOG BREAKDOWN REGULER VS TEMPORER
+      const totalSemua = Object.keys(students).length;
+      let countTemporer = 0;
+
+      Object.values(students).forEach(s => {
+        if (s.jamMasukKhusus || s.jamPulangKhusus) {
+          countTemporer++;
+        }
+      });
+
+      const countReguler = totalSemua - countTemporer;
+
+      console.log(
+        `✅ Data siswa berhasil dimuat: Total ${totalSemua} siswa ` +
+        `(${countReguler} Reguler, ${countTemporer} Temporer/Jadwal Khusus)`
+      );
     })
     .catch(error => {
       clearInterval(fakeProgress);
