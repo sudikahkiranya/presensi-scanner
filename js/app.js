@@ -1154,6 +1154,36 @@ function switchTab(tab) {
     if (content) content.style.display = name === tab ? 'block' : 'none';
     if (button) button.classList.toggle('active', name === tab);
   });
+
+  // JIKA BUKA TAB PROTEKSI, SYNC CENTANG & SWITCH DENGAN STATE ACTIVE FE SECARA INSTAN:
+  if (tab === 'proteksi') {
+    syncProtectionUIWithActiveState();
+  }
+}
+
+// FUNGSI KHUSUS SYNC ELEMEN MODAL DENGAN STATE FE ACTIVE
+function syncProtectionUIWithActiveState() {
+  // Ambil state proteksi yang sedang ON di sistem scanner
+  const cfg = window.scannerProtectionConfig || {
+    manualInput: true, autoDelete: true, paste: true, dragDrop: true, clipboardShortcut: true
+  };
+
+  const ids = {
+    manualInput: "cfgProtectManualInput",
+    autoDelete: "cfgProtectAutoDelete",
+    paste: "cfgProtectPaste",
+    dragDrop: "cfgProtectDragDrop",
+    clipboardShortcut: "cfgProtectClipboardShortcut"
+  };
+
+  // Isikan centang checkbox di UI
+  Object.keys(ids).forEach(function(key) {
+    const el = document.getElementById(ids[key]);
+    if (el) el.checked = (cfg[key] === true);
+  });
+
+  // Update saklar Master Proteksi (OFF/ON)
+  updateProtectionStatusUI();
 }
 
 function switchTimeTab(tab) {
