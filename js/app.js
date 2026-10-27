@@ -995,7 +995,7 @@ function loadProtectionSettings(onComplete) {
 
   runGasApi("scannerGetProtectionSettings")
     .then(result => {
-      // Prioritas 1: Server GAS | Prioritas 2: LocalStorage | Prioritas 3: Default ON (semua true)
+      // Prioritas 1: Server | Prioritas 2: LocalStorage | Prioritas 3: Default ON
       let serverConfig = (result && result.success && result.config) ? result.config : null;
 
       if (!serverConfig || Object.keys(serverConfig).length === 0) {
@@ -1004,7 +1004,6 @@ function loadProtectionSettings(onComplete) {
         } catch (e) {}
       }
 
-      // Pastikan jika data belum pernah disimpan, SEMUA item bernilai true (ON) secara default
       const finalConfig = {
         manualInput: serverConfig && serverConfig.manualInput !== undefined ? !!serverConfig.manualInput : true,
         autoDelete: serverConfig && serverConfig.autoDelete !== undefined ? !!serverConfig.autoDelete : true,
@@ -1013,7 +1012,6 @@ function loadProtectionSettings(onComplete) {
         clipboardShortcut: serverConfig && serverConfig.clipboardShortcut !== undefined ? !!serverConfig.clipboardShortcut : true
       };
 
-      // 1. ISIKAN STATUS CHECKBOX KE HTML
       const ids = {
         manualInput: "cfgProtectManualInput",
         autoDelete: "cfgProtectAutoDelete",
@@ -1027,11 +1025,9 @@ function loadProtectionSettings(onComplete) {
         if (el) el.checked = finalConfig[key] === true;
       });
 
-      // 2. SIMPAN & WAPPERKAN KE GLOBAL STATE SCANNER
+      // Simpan & terapkan ke 1 sumber utama FE
       applyScannerProtectionSettings(finalConfig);
       localStorage.setItem("scanner_protection_config", JSON.stringify(finalConfig));
-
-      // 3. PAKSA UI SWITCH (OFF/ON) MENYESUAIKAN STATUS CHECKBOX SECARA LANGSUNG
       updateProtectionStatusUI();
 
       if (typeof onComplete === "function") {
@@ -1043,27 +1039,48 @@ function loadProtectionSettings(onComplete) {
     .catch(err => { 
       hideSettingsLoading(true); 
       console.error("Gagal memuat konfigurasi proteksi", err);
-
-      // Fallback jika koneksi RTO: Paksa Centang Berdasarkan Cache Lokal / Default ON
-      const cached = JSON.parse(localStorage.getItem("scanner_protection_config") || "{}");
-      const fallbackConfig = {
-        manualInput: cached.manualInput !== undefined ? !!cached.manualInput : true,
-        autoDelete: cached.autoDelete !== undefined ? !!cached.autoDelete : true,
-        paste: cached.paste !== undefined ? !!cached.paste : true,
-        dragDrop: cached.dragDrop !== undefined ? !!cached.dragDrop : true,
-        clipboardShortcut: cached.clipboardShortcut !== undefined ? !!cached.clipboardShortcut : true
-      };
-
-      ["cfgProtectManualInput", "cfgProtectAutoDelete", "cfgProtectPaste", "cfgProtectDragDrop", "cfgProtectClipboardShortcut"].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.checked = true;
-      });
-
-      applyScannerProtectionSettings(fallbackConfig);
-      updateProtectionStatusUI();
-
       if (typeof onComplete === "function") onComplete();
     });
+}
+
+function saveProtectionSettings() {
+  if (window.settingsAccessRole !== "superadmin") {
+    showToast("Hanya Super Admin yang dapat menyimpan proteksi.", "warning");
+    return false;
+  }
+  
+  const config = {
+    manualInput: !!document.getElementById("cfgProtectManualInput")?.checked,
+    autoDelete: !!document.getElementById("cfgProtectAutoDelete")?.checked,
+    paste: !!document.getElementById("cfgProtectPaste")?.checked,
+    dragDrop: !!document.getElementById("cfgProtectDragDrop")?.checked,
+    clipboardShortcut: !!document.getElementById("cfgProtectClipboardShortcut")?.checked
+  };
+
+  showSettingsLoading("Menyimpan konfigurasi proteksi...");
+
+  runGasApi("scannerSaveProtectionSettings", { config, token: window.settingsAdminToken })
+    .then(result => {
+      hideSettingsLoading(true);
+      if (!result || !result.success) { 
+        showToast((result && result.message) || "Gagal menyimpan proteksi.", "error"); 
+        return; 
+      }
+
+      // Update 1 Sumber Utama di Browser
+      localStorage.setItem("scanner_protection_config", JSON.stringify(config));
+      applyScannerProtectionSettings(config);
+      updateProtectionStatusUI();
+      
+      closeSettingsModal();
+      showToast("Konfigurasi proteksi berhasil disimpan.", "success");
+    })
+    .catch(err => { 
+      hideSettingsLoading(true); 
+      showToast("Gagal menyimpan konfigurasi proteksi.", "error"); 
+      console.error(err); 
+    });
+  return true;
 }
 
 function applyScannerProtectionSettings(config) {
@@ -2127,7 +2144,6 @@ function updateProtectionStatusUI() {
 
   if (checkboxes.length === 0) return;
 
-  // Hitung berapa banyak checkbox yang dicentang
   const activeCount = checkboxes.filter(checkbox => checkbox.checked).length;
   const isAnyActive = activeCount > 0;
 
