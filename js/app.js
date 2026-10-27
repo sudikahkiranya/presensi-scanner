@@ -1367,14 +1367,17 @@ function renderJurusanUI() {
     const namaKelas = String(s.class).trim();
     let tingkat = String(s.tingkat || "").trim().toUpperCase();
 
-    // Buka filter jika mode TKA, jalankan pengecekan isLevelAllowed jika reguler
-    if (tingkat !== "TKA" && !isLevelAllowed(s.tingkat, s.class)) return;
+    // Cek apakah siswa ini punya jadwal/akses khusus (misal dari master temporer)
+    const hasCustomSchedule = !!(s.jamMasukKhusus || s.jamPulangKhusus);
+
+    // Buka filter jika siswa punya jadwal khusus, jalankan pengecekan level jika reguler
+    if (!hasCustomSchedule && !isLevelAllowed(s.tingkat, s.class)) return;
 
     if (!tingkat || tingkat === "UNDEFINED") {
       if (namaKelas.includes("XII") || namaKelas.startsWith("XII")) tingkat = "XII";
       else if (namaKelas.includes("XI") || namaKelas.startsWith("XI")) tingkat = "XI";
       else if (namaKelas.includes("X") || namaKelas.startsWith("X")) tingkat = "X";
-      else tingkat = "LAINNYA";
+      else tingkat = "KHUSUS";
     }
 
     if (!rekapMap[namaKelas]) {
@@ -1404,23 +1407,31 @@ function renderJurusanUI() {
     }
   });
 
-  const groupedByTingkat = {
-    "X": [],
-    "XI": [],
-    "XII": [],
-    "TKA": [],
-    "LAINNYA": []
-  };
+  // OBJEK GROUPING DINAMIS (Tidak ada hardcoded TKA)
+  const groupedByTingkat = {};
 
   Object.keys(rekapMap).forEach(kName => {
     const item = rekapMap[kName];
     if (item.hadir === 0) return;
 
     const percent = item.total > 0 ? (item.hadir / item.total) * 100 : 0;
-    const tKey = item.tingkat in groupedByTingkat ? item.tingkat : "LAINNYA";
+    const tKey = item.tingkat || "LAINNYA";
+
+    if (!groupedByTingkat[tKey]) {
+      groupedByTingkat[tKey] = [];
+    }
 
     const sampleStudent = Object.values(students).find(s => s && String(s.class || "").trim() === kName);
-    const namaKelasTampilan = sampleStudent ? formatNamaKelas(String(sampleStudent.class || "").trim(), item.tingkat) : kName;
+    
+    // PEMBERSIHAN TEKS DISPLAY AGAR RAPI DI REKAP:
+    let namaKelasTampilan = sampleStudent ? formatNamaKelas(String(sampleStudent.class || "").trim(), item.tingkat) : kName;
+    
+    // Jika mengandung kata "SESI", rapikan formatnya agar tidak panjang memakan tempat
+    if (/sesi/i.test(namaKelasTampilan)) {
+      namaKelasTampilan = namaKelasTampilan
+        .replace(/TKA-SESI\s*/i, "Sesi ")
+        .replace(/SESI-/i, "Sesi ");
+    }
 
     groupedByTingkat[tKey].push({
       namaKelas: kName,
@@ -1433,7 +1444,8 @@ function renderJurusanUI() {
     });
   });
 
-  ["X", "XI", "XII", "TKA", "LAINNYA"].forEach(tKat => {
+  // SORTING URUTAN KEHADIRAN PER TINGKAT
+  Object.keys(groupedByTingkat).forEach(tKat => {
     groupedByTingkat[tKat].sort((a, b) => {
       if (b.percentRounded !== a.percentRounded) return b.percentRounded - a.percentRounded;
       if (a.lastScanTime > 0 && b.lastScanTime > 0 && a.lastScanTime !== b.lastScanTime) return a.lastScanTime - b.lastScanTime;
@@ -1446,17 +1458,24 @@ function renderJurusanUI() {
   let htmlContent = "";
   let hasData = false;
 
-  // Daftar kelompok yang akan dirender ke kolom UI
-  const displayLevels = ["X", "XI", "XII", "TKA"];
+  // URUTAN TAMPILAN: Utamakan Reguler (X, XI, XII), sisanya (TKA, UTBK, Dll) menyusul dinamis
+  const priorityOrder = ["X", "XI", "XII"];
+  const dynamicKeys = Object.keys(groupedByTingkat).filter(k => !priorityOrder.includes(k));
+  const displayLevels = [...priorityOrder, ...dynamicKeys];
 
   displayLevels.forEach(tKat => {
     const listKelas = groupedByTingkat[tKat];
-    if (tKat !== "TKA" && !isLevelAllowed(tKat, "")) return;
-    if (listKelas.length === 0) return;
+    if (!listKelas || listKelas.length === 0) return;
+
+    // Pengecekan filter level hanya untuk tingkat reguler (X, XI, XII)
+    if (priorityOrder.includes(tKat) && !isLevelAllowed(tKat, "")) return;
 
     hasData = true;
 
-    const titleHeader = tKat === "TKA" ? "Rekap Sesi TKA" : `Rekap Kelas ${tKat}`;
+    // JUDUL HEADER DINAMIS
+    const titleHeader = priorityOrder.includes(tKat) 
+      ? `Rekap Kelas ${tKat}` 
+      : `Rekap ${tKat.includes("SESI") ? tKat : "Sesi " + tKat}`;
 
     htmlContent += `
       <div class="tingkat-column">
