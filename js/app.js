@@ -875,13 +875,12 @@ function openSettingsModal() {
   window.settingsAdminToken = "";
   applySettingsRoleAccess("petugas");
   setModalMode("pin");
+  
+  // Tampilkan form PIN langsung tanpa loading
   document.getElementById("pinStep").style.display = "block";
   document.getElementById("formStep").style.display = "none";
   document.getElementById("pinInput").value = "";
   document.getElementById("settingsModal").classList.add("active");
-
-  // SEGERA ISI CHECKLIST & SWITCH ON/OFF MODAL SESUAI DATA PROTEKSI TERAKHIR
-  loadProtectionSettings();
 
   setTimeout(() => { document.getElementById("pinInput").focus(); }, 200);
 }

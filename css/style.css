@@ -1792,3 +1792,27 @@ button.config-jam-switch-option.is-selected {
   text-overflow: unset !important;
   line-height: 1.3;
 }
+
+/* AUTO COMPACT SAAT DATA REKAP MELUAP */
+.rekap-card-layout {
+  overflow-y: auto !important; /* Agar jika diluar layar tetap bisa di-scroll rapi */
+}
+
+/* Jika kolom mengalami overflow, jadikan 2 kolom mini / sesuaikan ukurannya */
+.kelas-list-stack.is-overflow-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)) !important;
+  gap: 4px !important;
+}
+
+.kelas-list-stack.is-overflow-grid .kelas-item-compact {
+  padding: 4px 6px !important;
+}
+
+.kelas-list-stack.is-overflow-grid .kelas-nama-bold {
+  font-size: 11px !important;
+}
+
+.kelas-list-stack.is-overflow-grid .kelas-stats-text {
+  font-size: 10px !important;
+}
