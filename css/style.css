@@ -557,28 +557,30 @@ input#nis:focus {
   max-height: 100% !important;
   box-sizing: border-box !important;
   padding: 4px !important;
-  display: grid !important;
-  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-  align-items: center !important; /* Mensejajarkan 3 kolom tepat di tengah-tengah secara vertikal */
-  gap: 16px !important;
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  justify-content: center !important; /* Bikin 1, 2, atau 3 kolom selalu pas di tengah secara horizontal */
+  align-items: center !important;     /* Bikin di tengah secara vertikal */
+  gap: 20px !important;               /* Jarak antar kolom */
   overflow-y: auto !important;
   overflow-x: hidden !important;
 }
 
-/* HILANGKAN WADAH/CONTAINER ABU-ABU */
 .tingkat-column {
+  flex: 0 1 320px !important;         /* Lebar ideal per kolom max 320px agar proporsional */
   width: 100% !important;
+  max-width: 340px !important;        /* Batas lebar maksimum biar tidak terlalu melar */
   min-width: 0 !important;
-  max-width: 100% !important;
   display: flex !important;
   flex-direction: column !important;
-  background: transparent !important; /* Hilangkan background abu-abu */
-  border: none !important;             /* Hilangkan garis border luar */
+  background: transparent !important;
+  border: none !important;
   border-radius: 0 !important;
-  padding: 0 !important;              /* Hilangkan padding internal container */
+  padding: 0 !important;
   box-sizing: border-box !important;
   gap: 6px !important;
-  align-self: center !important;       /* Posisi per kolom seimbang atas-bawah */
+  align-self: center !important;
 }
 
 /* JUDUL TINGKAT (REKAP KELAS X, XI, XII) */
