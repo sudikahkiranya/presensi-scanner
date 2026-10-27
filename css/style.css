@@ -1772,3 +1772,11 @@ button.config-jam-switch-option.is-selected {
   border-color: #dd9787 !important;
   box-shadow: 0 1px 3px rgba(221, 151, 135, 0.3) !important;
 }
+
+#scanStudentClass {
+  white-space: normal !important;
+  word-break: break-word;
+  overflow: visible !important;
+  text-overflow: unset !important;
+  line-height: 1.3;
+}

@@ -535,6 +535,30 @@ function calculateScanStatus(nowDate, tingkatSiswa, rawStudentObj) {
   }
 }
 
+function createInitialAvatarDataUrl(name) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 300;
+  canvas.height = 400;
+  const ctx = canvas.getContext("2d");
+
+  // Background Gradient
+  const gradient = ctx.createLinearGradient(0, 0, 300, 400);
+  gradient.addColorStop(0, "#1e3a8a"); // Navy
+  gradient.addColorStop(1, "#2563eb"); // Blue
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 300, 400);
+
+  // Text Inisial (Huruf Pertama Nama)
+  const initial = name ? name.trim().charAt(0).toUpperCase() : "?";
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 130px sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(initial, 150, 200);
+
+  return canvas.toDataURL("image/png");
+}
+
 function showSuccess(nis, name, kelas, tingkat, time, photo, statusInfo) {
   const isPulang = statusInfo.isPulang;
 
@@ -566,12 +590,13 @@ function showSuccess(nis, name, kelas, tingkat, time, photo, statusInfo) {
   const classEl = document.getElementById("scanStudentClass");
   const timeEl = document.getElementById("scanTimeDigital");
 
-  const photoSrc = photo ? photo : LOGO_SEKOLAH;
+  // LOGIKA AVATAR INISIAL FALLBACK
+  const initialAvatar = createInitialAvatarDataUrl(name);
+  photoImg.onerror = function() { this.src = initialAvatar; };
+  photoImg.src = photo && photo.trim() !== "" ? photo : initialAvatar;
+
   const badgeLabel = isPulang ? `📤 PRESENSI PULANG • KE-${urutanScan}` : `📥 PRESENSI MASUK • KE-${urutanScan}`;
   const badgeClass = isPulang ? "badge-pulang" : "badge-masuk";
-
-  photoImg.onerror = function() { this.src = LOGO_SEKOLAH; };
-  photoImg.src = photoSrc;
 
   badgeEl.className = `scan-badge-top ${badgeClass}`;
   badgeEl.innerText = badgeLabel;
@@ -580,7 +605,10 @@ function showSuccess(nis, name, kelas, tingkat, time, photo, statusInfo) {
   statusAlertEl.innerText = statusInfo.label;
 
   nameEl.innerText = name.toUpperCase();
-  classEl.innerText = formatNamaKelas(kelas, tingkat);
+  
+  // PENYESUAIAN MODULAR TEKS KELAS/ROMBEL:
+  const isCustomRombel = kelas.includes("-") || /sesi|lab|ruang/i.test(kelas);
+  classEl.innerText = isCustomRombel ? kelas : formatNamaKelas(kelas, tingkat);
 
   timeEl.style.color = statusInfo.color;
   timeEl.innerText = `${time} WIB`;
@@ -1614,6 +1642,29 @@ function updateActiveLevelsBadge() {
   }
 }
 
+function createErrorAvatarDataUrl() {
+  const canvas = document.createElement("canvas");
+  canvas.width = 300;
+  canvas.height = 400;
+  const ctx = canvas.getContext("2d");
+
+  // Background Gradient Merah Alert
+  const gradient = ctx.createLinearGradient(0, 0, 300, 400);
+  gradient.addColorStop(0, "#991b1b"); // Merah gelap
+  gradient.addColorStop(1, "#dc2626"); // Merah terang
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 300, 400);
+
+  // Teks Ikon Peringatan (⚠️ atau ❌)
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 110px sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("⚠️", 150, 200);
+
+  return canvas.toDataURL("image/png");
+}
+
 function showError(msg) {
   try {
     const idleBox = document.getElementById("idleBox");
@@ -1626,7 +1677,9 @@ function showError(msg) {
     const photoImg = document.getElementById("scanPhotoImg");
 
     if (idleBox && scanBox) {
-      if (photoImg) photoImg.src = LOGO_SEKOLAH;
+      // GANTI LOGO SEKOLAH DENGAN AVATAR ERROR MERAH:
+      if (photoImg) photoImg.src = createErrorAvatarDataUrl();
+
       if (badgeEl) {
         badgeEl.className = "scan-badge-top badge-pulang";
         badgeEl.innerText = "🚨 SCAN ERROR / REJECTED";
