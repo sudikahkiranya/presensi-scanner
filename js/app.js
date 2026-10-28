@@ -285,7 +285,6 @@ function loadStudents() {
         setTimeout(autoSyncIfOnline, 2000);
       }, 300);
 
-      // RINCIAN LOG BREAKDOWN REGULER VS TEMPORER
       const totalSemua = Object.keys(students).length;
       let countTemporer = 0;
 
@@ -462,7 +461,6 @@ input.addEventListener("keydown", function(e) {
       const now = new Date();
       const time = now.toTimeString().split(' ')[0]; 
       
-      // PERBAIKAN DI BARIS INI: Kirim rawStudentData sebagai argumen ke-3
       const statusInfo = calculateScanStatus(now, tingkat, rawStudentData);
 
       showSuccess(nis, name, kelas, tingkat, time, photo, statusInfo);
@@ -506,12 +504,10 @@ function calculateScanStatus(nowDate, tingkatSiswa, rawStudentObj) {
   let jMasuk = "06:45";
   let jPulang = "11:00";
 
-  // PRIORITAS 1: Pakai Jam Khusus Personal jika ada (dari Master Temporer)
   if (rawStudentObj && rawStudentObj.jamMasukKhusus && rawStudentObj.jamPulangKhusus) {
     jMasuk = rawStudentObj.jamMasukKhusus;
     jPulang = rawStudentObj.jamPulangKhusus;
   } 
-  // PRIORITAS 2: Pakai Config Jam Harian / Per Tingkat
   else if (activeConfig) {
     if (activeConfig.default) {
       jMasuk = activeConfig.default.jamMasuk || jMasuk;
@@ -556,14 +552,12 @@ function createInitialAvatarDataUrl(name) {
   canvas.height = 400;
   const ctx = canvas.getContext("2d");
 
-  // Background Gradient
   const gradient = ctx.createLinearGradient(0, 0, 300, 400);
-  gradient.addColorStop(0, "#1e3a8a"); // Navy
-  gradient.addColorStop(1, "#2563eb"); // Blue
+  gradient.addColorStop(0, "#1e3a8a"); 
+  gradient.addColorStop(1, "#2563eb"); 
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, 300, 400);
 
-  // Text Inisial (Huruf Pertama Nama)
   const initial = name ? name.trim().charAt(0).toUpperCase() : "?";
   ctx.fillStyle = "#ffffff";
   ctx.font = "bold 130px sans-serif";
@@ -605,7 +599,6 @@ function showSuccess(nis, name, kelas, tingkat, time, photo, statusInfo) {
   const classEl = document.getElementById("scanStudentClass");
   const timeEl = document.getElementById("scanTimeDigital");
 
-  // LOGIKA AVATAR INISIAL FALLBACK
   const initialAvatar = createInitialAvatarDataUrl(name);
   photoImg.onerror = function() { this.src = initialAvatar; };
   photoImg.src = photo && photo.trim() !== "" ? photo : initialAvatar;
@@ -621,7 +614,6 @@ function showSuccess(nis, name, kelas, tingkat, time, photo, statusInfo) {
 
   nameEl.innerText = name.toUpperCase();
   
-  // PENYESUAIAN MODULAR TEKS KELAS/ROMBEL:
   const isCustomRombel = kelas.includes("-") || /sesi|lab|ruang/i.test(kelas);
   classEl.innerText = isCustomRombel ? kelas : formatNamaKelas(kelas, tingkat);
 
@@ -876,7 +868,6 @@ function openSettingsModal() {
   applySettingsRoleAccess("petugas");
   setModalMode("pin");
   
-  // Tampilkan form PIN langsung tanpa loading
   document.getElementById("pinStep").style.display = "block";
   document.getElementById("formStep").style.display = "none";
   document.getElementById("pinInput").value = "";
@@ -889,7 +880,6 @@ function closeSettingsModal() {
   hideSettingsLoading(true);
   document.getElementById("settingsModal").classList.remove("active");
   
-  // Refresh indikator sesuai config yang benar-benar tersimpan
   updateConfigIndicators();
   
   setTimeout(() => { input.focus(); }, 200);
@@ -944,7 +934,6 @@ function verifyPin() {
         renderConfigJamToggle();
       };
 
-      // Hanya load form proteksi jika Super Admin
       if (window.settingsAccessRole === "superadmin") {
         loadProtectionSettings(onCompleteVerify);
       } else {
@@ -1005,12 +994,21 @@ function loadProtectionSettings(onComplete) {
 
   runGasApi("scannerGetProtectionSettings")
     .then(result => {
-      // 1. Prioritas Baca Data: Server GAS -> LocalStorage -> Default ON (True)
       let serverConfig = (result && result.success && result.config) ? result.config : null;
+      const today = getLocalDateString();
 
+      // CEK LOCALSTORAGE BEDA HARI / SAMA HARI
       if (!serverConfig || Object.keys(serverConfig).length === 0) {
         try {
-          serverConfig = JSON.parse(localStorage.getItem("scanner_protection_config") || "null");
+          const cached = JSON.parse(localStorage.getItem("scanner_protection_config") || "null");
+          
+          if (cached && cached.savedDate === today) {
+            serverConfig = cached;
+          } else {
+            // BERGANTI HARI -> OTO-RESET LOCALSTORAGE TO DEFAULT
+            localStorage.removeItem("scanner_protection_config");
+            serverConfig = null;
+          }
         } catch (e) {}
       }
 
@@ -1022,7 +1020,6 @@ function loadProtectionSettings(onComplete) {
         clipboardShortcut: serverConfig && serverConfig.clipboardShortcut !== undefined ? !!serverConfig.clipboardShortcut : true
       };
 
-      // 2. ISIKAN STATUS CENTANG KE HTML MODAL SAJA (JANGAN TIMPA SYSTEM GLOBAL FE DULU!)
       const ids = {
         manualInput: "cfgProtectManualInput",
         autoDelete: "cfgProtectAutoDelete",
@@ -1036,7 +1033,6 @@ function loadProtectionSettings(onComplete) {
         if (el) el.checked = (finalConfig[key] === true);
       });
 
-      // Update warna tombol Switch ON/OFF di UI modal
       updateProtectionStatusUI();
 
       if (typeof onComplete === "function") {
@@ -1063,7 +1059,8 @@ function saveProtectionSettings() {
     autoDelete: !!document.getElementById("cfgProtectAutoDelete")?.checked,
     paste: !!document.getElementById("cfgProtectPaste")?.checked,
     dragDrop: !!document.getElementById("cfgProtectDragDrop")?.checked,
-    clipboardShortcut: !!document.getElementById("cfgProtectClipboardShortcut")?.checked
+    clipboardShortcut: !!document.getElementById("cfgProtectClipboardShortcut")?.checked,
+    savedDate: getLocalDateString() // Stamp tanggal penyimpanan
   };
 
   showSettingsLoading("Menyimpan konfigurasi proteksi...");
@@ -1076,13 +1073,12 @@ function saveProtectionSettings() {
         return; 
       }
 
-      // Update 1 Sumber Utama di Browser
       localStorage.setItem("scanner_protection_config", JSON.stringify(config));
       applyScannerProtectionSettings(config);
       updateProtectionStatusUI();
       
       closeSettingsModal();
-      showToast("Konfigurasi proteksi berhasil disimpan.", "success");
+      showToast("Konfigurasi proteksi berhasil disimpan untuk hari ini.", "success");
     })
     .catch(err => { 
       hideSettingsLoading(true); 
@@ -1093,7 +1089,6 @@ function saveProtectionSettings() {
 }
 
 function applyScannerProtectionSettings(config) {
-  // Jika config kosong, fallback ke state lama atau default true
   const current = window.scannerProtectionConfig || {};
 
   window.scannerProtectionConfig = {
@@ -1127,10 +1122,7 @@ function updateConfigIndicators() {
     jamEl.setAttribute("aria-label", jamEl.title);
   }
 
-  // BACA HANYA DARI VARIABEL GLOBAL SCANNER FE
   const cfg = window.scannerProtectionConfig || {};
-  
-  // Jika minimal ada 1 proteksi yang bernilai true, maka indikator dianggap AKTIF (Hijau)
   const protectActive = Object.keys(cfg).length === 0 ? true : Object.keys(cfg).some(k => cfg[k] === true);
 
   if (protectEl) {
@@ -1154,15 +1146,12 @@ function switchTab(tab) {
     if (button) button.classList.toggle('active', name === tab);
   });
 
-  // JIKA BUKA TAB PROTEKSI, SYNC CENTANG & SWITCH DENGAN STATE ACTIVE FE SECARA INSTAN:
   if (tab === 'proteksi') {
     syncProtectionUIWithActiveState();
   }
 }
 
-// FUNGSI KHUSUS SYNC ELEMEN MODAL DENGAN STATE FE ACTIVE
 function syncProtectionUIWithActiveState() {
-  // Ambil state proteksi yang sedang ON di sistem scanner
   const cfg = window.scannerProtectionConfig || {
     manualInput: true, autoDelete: true, paste: true, dragDrop: true, clipboardShortcut: true
   };
@@ -1175,13 +1164,11 @@ function syncProtectionUIWithActiveState() {
     clipboardShortcut: "cfgProtectClipboardShortcut"
   };
 
-  // Isikan centang checkbox di UI
   Object.keys(ids).forEach(function(key) {
     const el = document.getElementById(ids[key]);
     if (el) el.checked = (cfg[key] === true);
   });
 
-  // Update saklar Master Proteksi (OFF/ON)
   updateProtectionStatusUI();
 }
 
@@ -1208,7 +1195,6 @@ function isConfigJamEnabledToday() {
   if (saved && typeof saved.enabled === "boolean") {
     return saved.enabled;
   }
-  // Jika belum ada tindakan manual, ikuti status isKhusus bawaan backend
   return !!(activeConfig && activeConfig.isKhusus);
 }
 
@@ -1360,7 +1346,6 @@ function loadLocalOverrideJam() {
   if (saved) {
     try {
       const parsed = JSON.parse(saved);
-      // Hanya timpa kalau user memproses toggle manual HARI INI via Modal Settings
       if (parsed.date === getLocalDateString() && parsed.enabled === true && parsed.config) {
         activeConfig = JSON.parse(JSON.stringify(parsed.config));
         renderConfigJamToggle();
@@ -1374,7 +1359,6 @@ function loadLocalOverrideJam() {
     }
   }
 
-  // Jika tidak ada override manual dari modal, gunakan config otomatis bawaan backend
   if (window.scannerDefaultConfig) {
     activeConfig = JSON.parse(JSON.stringify(window.scannerDefaultConfig));
   }
@@ -1468,53 +1452,47 @@ function renderJurusanUI() {
 
   const groupedByTingkat = {};
 
-  // KODE BARU (FIX NAMA KELAS HUMAN-READABLE):
-Object.keys(rekapMap).forEach(kName => {
-  const item = rekapMap[kName];
-  if (item.hadir === 0) return;
+  Object.keys(rekapMap).forEach(kName => {
+    const item = rekapMap[kName];
+    if (item.hadir === 0) return;
 
-  const percent = item.total > 0 ? (item.hadir / item.total) * 100 : 0;
-  
-  let groupKey = item.tingkat || "LAINNYA";
-  
-  // 1. CARI SAMPLE STUDENT UNTUK REKAP
-  const sampleStudent = Object.values(students).find(s => s && String(s.class || "").trim() === kName);
-  
-  // 2. CONVERT ID KELAS JADI NAMA CANTIK (Contoh: "FAR-A26" -> "X FAR 1")
-  let namaLabBersih = sampleStudent 
-    ? formatNamaKelas(String(sampleStudent.class || "").trim(), item.tingkat) 
-    : formatNamaKelas(kName, item.tingkat);
-
-  // Deteksi nomor Sesi untuk auto-grouping khusus temporer/lab
-  const matchSesi = kName.match(/sesi\s*(\d+|[a-z]+)/i);
-  if (matchSesi) {
-    const sesiNum = matchSesi[1];
-    groupKey = `${item.tingkat} - Sesi ${sesiNum}`;
+    const percent = item.total > 0 ? (item.hadir / item.total) * 100 : 0;
     
-    // Bersihkan teks kelas/ruang jika ada kata Sesi/TKA
-    namaLabBersih = kName
-      .replace(/[-\s]*tka[-\s]*/i, " ")
-      .replace(/[-\s]*sesi\s*(\d+|[a-z]+)/i, "")
-      .trim();
-  }
+    let groupKey = item.tingkat || "LAINNYA";
+    
+    const sampleStudent = Object.values(students).find(s => s && String(s.class || "").trim() === kName);
+    
+    let namaLabBersih = sampleStudent 
+      ? formatNamaKelas(String(sampleStudent.class || "").trim(), item.tingkat) 
+      : formatNamaKelas(kName, item.tingkat);
 
-  if (!groupedByTingkat[groupKey]) {
-    groupedByTingkat[groupKey] = [];
-  }
+    const matchSesi = kName.match(/sesi\s*(\d+|[a-z]+)/i);
+    if (matchSesi) {
+      const sesiNum = matchSesi[1];
+      groupKey = `${item.tingkat} - Sesi ${sesiNum}`;
+      
+      namaLabBersih = kName
+        .replace(/[-\s]*tka[-\s]*/i, " ")
+        .replace(/[-\s]*sesi\s*(\d+|[a-z]+)/i, "")
+        .trim();
+    }
 
-  groupedByTingkat[groupKey].push({
-    namaKelas: kName,
-    namaKelasTampilan: namaLabBersih || kName,
-    total: item.total,
-    hadir: item.hadir,
-    percent: percent,
-    percentRounded: Math.round(percent),
-    lastScanTime: item.lastScanTime,
-    isCustom: item.isCustom || !["X", "XI", "XII"].includes(item.tingkat)
+    if (!groupedByTingkat[groupKey]) {
+      groupedByTingkat[groupKey] = [];
+    }
+
+    groupedByTingkat[groupKey].push({
+      namaKelas: kName,
+      namaKelasTampilan: namaLabBersih || kName,
+      total: item.total,
+      hadir: item.hadir,
+      percent: percent,
+      percentRounded: Math.round(percent),
+      lastScanTime: item.lastScanTime,
+      isCustom: item.isCustom || !["X", "XI", "XII"].includes(item.tingkat)
+    });
   });
-});
 
-  // SORTING URUTAN KEHADIRAN
   Object.keys(groupedByTingkat).forEach(tKat => {
     groupedByTingkat[tKat].sort((a, b) => {
       if (b.percentRounded !== a.percentRounded) return b.percentRounded - a.percentRounded;
@@ -1556,7 +1534,6 @@ Object.keys(rekapMap).forEach(kName => {
       if (k.percentRounded >= 85) colorClass = "high";
       else if (k.percentRounded < 50) colorClass = "low";
 
-      // HANYA PASANG MEDALI UNTUK KELAS REGULER (X, XI, XII):
       let medalIcon = "";
       if (isReguler && k.percentRounded > 0) {
         if (index === 0) medalIcon = " 🥇";
@@ -1613,7 +1590,6 @@ Object.keys(rekapMap).forEach(kName => {
 function applyRekapOverflowLayout(container = document.getElementById("kelasListContainer")) {
   if (!container) return;
 
-  // 1. Bersihkan pembungkus grup lama jika ada
   const oldGroups = Array.from(container.querySelectorAll(":scope > .rekap-column-group"));
   oldGroups.forEach(group => {
     while (group.firstElementChild) container.insertBefore(group.firstElementChild, group);
@@ -1623,13 +1599,11 @@ function applyRekapOverflowLayout(container = document.getElementById("kelasList
   const columns = Array.from(container.querySelectorAll(":scope > .tingkat-column"));
   if (!columns.length) return;
 
-  // 2. Reset kelas overflow pada stack
   columns.forEach(column => {
     const stack = column.querySelector(".kelas-list-stack");
     if (stack) stack.classList.remove("is-overflow-grid");
   });
 
-  // 3. Kalkulasi batas tinggi kontainer
   requestAnimationFrame(() => {
     if (!container.isConnected) return;
     const containerHeight = container.clientHeight || 500;
@@ -1643,7 +1617,6 @@ function applyRekapOverflowLayout(container = document.getElementById("kelasList
       const titleHeight = title ? title.getBoundingClientRect().height : 0;
       const stackHeight = stack.getBoundingClientRect().height;
 
-      // Jika jumlah item > 6 atau total tingginya melebihi kontainer, aktifkan mode Compact 2 Kolom
       if (stack.children.length > 6 || (titleHeight + stackHeight) > usableHeight) {
         stack.classList.add("is-overflow-grid");
       }
@@ -1651,7 +1624,6 @@ function applyRekapOverflowLayout(container = document.getElementById("kelasList
   });
 }
 
-// OBSERVER & RESIZE LISTENER
 if (!window.__rekapOverflowObserver && typeof ResizeObserver !== "undefined") {
   const rekapContainer = document.getElementById("kelasListContainer");
   if (rekapContainer) {
@@ -1706,14 +1678,12 @@ function createErrorAvatarDataUrl() {
   canvas.height = 400;
   const ctx = canvas.getContext("2d");
 
-  // Background Gradient Merah Alert
   const gradient = ctx.createLinearGradient(0, 0, 300, 400);
-  gradient.addColorStop(0, "#991b1b"); // Merah gelap
-  gradient.addColorStop(1, "#dc2626"); // Merah terang
+  gradient.addColorStop(0, "#991b1b"); 
+  gradient.addColorStop(1, "#dc2626"); 
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, 300, 400);
 
-  // Teks Ikon Peringatan (⚠️ atau ❌)
   ctx.fillStyle = "#ffffff";
   ctx.font = "bold 110px sans-serif";
   ctx.textAlign = "center";
@@ -1735,7 +1705,6 @@ function showError(msg) {
     const photoImg = document.getElementById("scanPhotoImg");
 
     if (idleBox && scanBox) {
-      // GANTI LOGO SEKOLAH DENGAN AVATAR ERROR MERAH:
       if (photoImg) photoImg.src = createErrorAvatarDataUrl();
 
       if (badgeEl) {
@@ -2149,7 +2118,6 @@ function updateProtectionStatusUI() {
 
   if (checkboxes.length === 0) return;
 
-  // Hitung berapa banyak checkbox yang dicentang
   const activeCount = checkboxes.filter(checkbox => checkbox.checked).length;
   const isAnyActive = activeCount > 0;
 
@@ -2176,13 +2144,16 @@ document.addEventListener("visibilitychange", function() {
 });
 setInterval(updateConfigIndicators, 60000);
 
-// SINKRONISASI 1 SUMBER UTAMA SAAT APLIKASI PERTAMA DI-LOAD
+// SINKRONISASI 1 SUMBER UTAMA SAAT APLIKASI PERTAMA DI-LOAD (GANTI HARI AUTO RESET TO DEFAULT)
 (function initGlobalProtectionState() {
   try {
     const cached = JSON.parse(localStorage.getItem("scanner_protection_config") || "null");
-    if (cached) {
+    const today = getLocalDateString();
+
+    if (cached && cached.savedDate === today) {
       applyScannerProtectionSettings(cached);
     } else {
+      localStorage.removeItem("scanner_protection_config");
       applyScannerProtectionSettings({
         manualInput: true, autoDelete: true, paste: true, dragDrop: true, clipboardShortcut: true
       });
@@ -2192,7 +2163,6 @@ setInterval(updateConfigIndicators, 60000);
   }
 })();
 
-// Function ekstraksi warna dominan dari image logo/foto
 function applyDominanGlow(imgElement) {
   if (!imgElement) return;
 
@@ -2202,7 +2172,6 @@ function applyDominanGlow(imgElement) {
     canvas.width = 50;
     canvas.height = 50;
 
-    // Draw image ke canvas ukuran kecil
     ctx.drawImage(img, 0, 0, 50, 50);
     const data = ctx.getImageData(0, 0, 50, 50).data;
 
@@ -2210,7 +2179,6 @@ function applyDominanGlow(imgElement) {
 
     for (let i = 0; i < data.length; i += 4) {
       const alpha = data[i + 3];
-      // Abaikan piksel transparan
       if (alpha > 128) {
         r += data[i];
         g += data[i + 1];
@@ -2219,17 +2187,15 @@ function applyDominanGlow(imgElement) {
       }
     }
 
-    if (count === 0) return "37, 99, 235"; // Fallback ke rgb default
+    if (count === 0) return "37, 99, 235";
     return `${Math.round(r / count)}, ${Math.round(g / count)}, ${Math.round(b / count)}`;
   };
 
   const processImg = () => {
     try {
       const rgbStr = getDominantColor(imgElement);
-      // Inject CSS Variable ke elemen logo
       imgElement.style.setProperty("--glow-rgb", rgbStr);
     } catch (e) {
-      // Jika kena CORS, fallback ke warna tema aplikasi (#824653 -> RGB: 130, 70, 83)
       imgElement.style.setProperty("--glow-rgb", "130, 70, 83");
     }
   };
@@ -2241,7 +2207,6 @@ function applyDominanGlow(imgElement) {
   }
 }
 
-// Inisialisasi saat aplikasi pertama dibuka
 document.addEventListener("DOMContentLoaded", () => {
   const logoIdle = document.querySelector(".logo-idle-mode");
   if (logoIdle) applyDominanGlow(logoIdle);
