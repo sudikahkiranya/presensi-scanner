@@ -614,8 +614,9 @@ function showSuccess(nis, name, kelas, tingkat, time, photo, statusInfo) {
 
   nameEl.innerText = name.toUpperCase();
   
-  const isCustomRombel = kelas.includes("-") || /sesi|lab|ruang/i.test(kelas);
-  classEl.innerText = isCustomRombel ? kelas : formatNamaKelas(kelas, tingkat);
+  // KODE BARU (SELALU FORMAT KELAS KECUALI KHUSUS SESI/LAB)
+  const isLabOrSesi = /sesi|lab|ruang/i.test(kelas);
+  classEl.innerText = isLabOrSesi ? kelas : formatNamaKelas(kelas, tingkat);
 
   timeEl.style.color = statusInfo.color;
   timeEl.innerText = `${time} WIB`;
