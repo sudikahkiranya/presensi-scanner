@@ -1959,12 +1959,18 @@ function renderHallOfFameUI() {
       return ((parts[0] || 0) * 3600 + (parts[1] || 0) * 60 + (parts[2] || 0)) * 1000;
     }
 
+    // 1. FILTER SERVER EARLY BIRDS (Abaikan jika siswa Temporer)
     if (window.serverEarlyBirds && Array.isArray(window.serverEarlyBirds)) {
       window.serverEarlyBirds.forEach(item => {
         const nisStr = typeof item === "object" ? String(item.nis || "") : String(item || "");
         if (!nisStr || processedNis.has(nisStr)) return;
-        processedNis.add(nisStr);
+        
         const student = students[nisStr];
+        
+        // ABARKAN JIKA SISWA MEMILIKI JADWAL TEMPORER/KHUSUS
+        if (student && (student.jamMasukKhusus || student.jamPulangKhusus)) return;
+
+        processedNis.add(nisStr);
         const timeDisplay = item && typeof item === "object" && item.time
           ? item.time.split(":").map((part, i) => String(part || "0").padStart(2, "0")).slice(0, 3).join(":")
           : "--:--:--";
@@ -1980,11 +1986,17 @@ function renderHallOfFameUI() {
       });
     }
 
+    // 2. FILTER SISWA HADIR LOKAL (Abaikan jika siswa Temporer)
     Object.keys(students).forEach(nis => {
       const stringNis = String(nis);
       if (!sudahHadirHariIni.has(stringNis) || processedNis.has(stringNis)) return;
-      processedNis.add(stringNis);
+      
       const student = students[stringNis];
+      
+      // ABAIKAN JIKA SISWA MEMILIKI JADWAL TEMPORER/KHUSUS
+      if (student && (student.jamMasukKhusus || student.jamPulangKhusus)) return;
+
+      processedNis.add(stringNis);
       const scanTimestamp = getStudentLastScanTimestamp(stringNis);
       const scanDate = scanTimestamp > 0 ? new Date(scanTimestamp) : new Date();
       const timeVal = `${String(scanDate.getHours()).padStart(2, "0")}:${String(scanDate.getMinutes()).padStart(2, "0")}:${String(scanDate.getSeconds()).padStart(2, "0")}`;
