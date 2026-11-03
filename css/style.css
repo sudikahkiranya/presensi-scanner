@@ -530,40 +530,39 @@ input#nis:focus {
   letter-spacing: -0.01em;
 }
 
-/* OUTLINE PROGRESS BAR (KAPSUL BURGUNDY SANGAT GELAP) */
+/* OUTLINE PROGRESS BAR (DISAMAKAN DENGAN HEADER #824653) */
 .progress-container {
   width: 100%;
   max-width: 380px;
   height: 14px;
-  background-color: #582a35; /* Base Burgundy Gelap */
+  background-color: rgba(130, 70, 83, 0.2); /* Base Burgundy Header dengan opasitas lembut */
   border-radius: 100px;
   overflow: hidden;
   position: relative;
-  border: 1px solid #421e27;
+  border: 1px solid rgba(130, 70, 83, 0.3);
   box-sizing: border-box;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-/* TRACK BAR (ANIMASI ISI ROSE GOLD - BURGUNDY METALLIC) */
+/* TRACK BAR (WARNA HEADER SOLID #824653) */
 .progress-bar {
   height: 100%;
   width: 45%;
-  background: linear-gradient(90deg, #dd9787, #e3a89b, #dd9787); /* Highlight Rose Gold Glowing */
+  background: #824653; /* Murni warna header banner */
   border-radius: 100px;
   position: absolute;
   left: -45%;
-  box-shadow: 0 0 10px rgba(221, 151, 135, 0.5);
+  box-shadow: 0 0 8px rgba(130, 70, 83, 0.4);
   animation: indeterminateLoading 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
-/* Animasi mengalir lancar dari kiri ke kanan */
+/* Animasi mengalir lancar */
 @keyframes indeterminateLoading {
   0% {
     left: -45%;
     width: 30%;
   }
   50% {
-    width: 55%; /* Meregang di tengah */
+    width: 55%;
   }
   100% {
     left: 100%;
