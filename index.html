@@ -22,11 +22,11 @@
     </div>
   </div>
 
-<!-- INITIAL FULL-SCREEN BOOT SPLASH (MATCHING LOGIN PIKET) -->
+<!-- INITIAL FULL-SCREEN BOOT SPLASH -->
 <div id="initialSplashLoader">
   <main class="container-login">
     
-    <!-- PANEL KIRI: VISUAL ARTWORK SAMA DENGAN LOGIN -->
+    <!-- PANEL KIRI: VISUAL ARTWORK -->
     <section class="login-visual" aria-label="Informasi aplikasi">
       <div class="visual-copy">
         <div class="visual-eyebrow">
@@ -36,41 +36,40 @@
       </div>
     </section>
 
-    <!-- PANEL KANAN: STEP CHECKLIST BOOT (TANPA LOGO SEKOLAH) -->
-    <section class="login-content" style="align-items: stretch; justify-content: center;">
+    <!-- PANEL KANAN: STEP CHECKLIST & PROGRESS BAR -->
+    <section class="login-content">
       
-      <!-- TITLE HEADER TANPA LOGO -->
+      <!-- HEADER TITLE -->
       <div class="splash-heading-title">
         <h2>Portal Presensi Piket</h2>
         <p>Menyiapkan sistem &amp; basis data presensi...</p>
       </div>
 
-      <!-- CHECKLIST STEP GIMIK -->
+      <!-- CHECKLIST STEP GIMIK (JAM PASIR -> CEKLIS) -->
       <div class="splash-steps-wrapper">
         <div class="splash-step-item" id="stepSekolah">
-          <span class="step-icon"></span>
-          <span class="step-label">Memuat konfigurasi data sekolah...</span>
-        </div>
-        <div class="splash-step-item" id="stepConfig">
-          <span class="step-icon"></span>
-          <span class="step-label">Memuat konfigurasi jam presensi...</span>
+          <span class="step-icon">○</span>
+          <span class="step-label">Memuat profil &amp; data sekolah...</span>
         </div>
         <div class="splash-step-item" id="stepSiswa">
-          <span class="step-icon"></span>
+          <span class="step-icon">○</span>
           <span class="step-label">Memuat database siswa aktif...</span>
         </div>
         <div class="splash-step-item" id="stepFoto">
-          <span class="step-icon"></span>
-          <span class="step-label">Menyiapkan direktori foto siswa...</span>
+          <span class="step-icon">○</span>
+          <span class="step-label">Pre-loading berkas foto siswa...</span>
+        </div>
+        <div class="splash-step-item" id="stepConfig">
+          <span class="step-icon">○</span>
+          <span class="step-label">Sinkronisasi konfigurasi presensi...</span>
         </div>
       </div>
 
-      <!-- KAPSUL PROGRESS BAR HANGAT (BURGUNDY & ROSE GOLD) -->
+      <!-- KAPSUL PROGRESS BAR (LEBAR DIPERPATUT & COMPACT) -->
       <div class="splash-progress-container">
         <div class="splash-progress-bar"></div>
       </div>
 
-      <footer class="login-footer">© SISENSI v 5.1</footer>
     </section>
   </main>
 </div>
