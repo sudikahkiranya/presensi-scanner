@@ -1608,7 +1608,7 @@ body.effects-disabled .idle-container {
 
 
 /* ==========================================================================
-   INITIAL BOOT SPLASH SCREEN (PERSISIS SAMA DENGAN TEMA LOGIN PIKET)
+   FIX SPLASH BOOT LAYOUT (2 KOLOM RAPI SAMA DENGAN LOGIN)
    ========================================================================== */
 #initialSplashLoader {
   position: fixed;
@@ -1619,7 +1619,7 @@ body.effects-disabled .idle-container {
   justify-content: center;
   padding: 28px;
   box-sizing: border-box;
-  font-family: 'Inter', 'Roboto', sans-serif;
+  font-family: 'Roboto', sans-serif;
   color: #34272B;
   background:
     radial-gradient(circle at 100% 0%, rgba(166,111,122,.16) 0 120px, transparent 121px),
@@ -1627,129 +1627,95 @@ body.effects-disabled .idle-container {
     linear-gradient(135deg, #F5F0E7 0%, #FBF8F2 55%, #F1EAE0 100%);
 }
 
+/* KUNCI MURNI 2 KOLOM (KIRI GAMBAR, KANAN TEKS) */
 #initialSplashLoader .container-login {
   width: min(790px, calc(100vw - 40px)) !important;
   max-width: 790px !important;
-  min-width: 0;
-  min-height: 425px;
-  display: grid;
-  grid-template-columns: minmax(0, .92fr) minmax(0, 1fr);
-  overflow: hidden;
-  padding: 0;
-  margin: auto;
-  border: 1px solid rgba(255,255,255,.96);
-  border-radius: 26px;
-  background: rgba(255,255,255,.97);
-  box-shadow: 0 24px 70px rgba(83,45,54,.13);
+  min-height: 425px !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1fr) !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  margin: auto !important;
+  border: 1px solid rgba(255,255,255,.96) !important;
+  border-radius: 26px !important;
+  background: rgba(255,255,255,.97) !important;
+  box-shadow: 0 24px 70px rgba(83,45,54,.13) !important;
 }
 
-/* HEADER TITLE TANPA LOGO */
+/* FIX PANEL KIRI (ILUSTRASI GAMBAR) */
+#initialSplashLoader .login-visual {
+  position: relative !important;
+  min-height: 425px !important;
+  height: 100% !important;
+  overflow: hidden !important;
+  background: #E8D7D9 !important;
+  display: flex !important;
+  align-items: flex-end !important;
+  padding: 22px !important;
+  isolation: isolate !important;
+  box-sizing: border-box !important;
+}
+
+#initialSplashLoader .login-visual::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  background-image: url('../assets/login-illustration.png') !important;
+  background-position: center center !important;
+  background-size: cover !important;
+  background-repeat: no-repeat !important;
+  z-index: -2 !important;
+}
+
+#initialSplashLoader .login-visual::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  background: linear-gradient(180deg, rgba(111,57,69,0) 36%, rgba(75,37,46,.82) 100%) !important;
+  z-index: -1 !important;
+}
+
+/* FIX PANEL KANAN (CONTENT & CHECKLIST STEPS) */
+#initialSplashLoader .login-content {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: stretch !important;
+  padding: clamp(22px, 3.2vw, 46px) !important;
+  min-width: 0 !important;
+  text-align: left !important;
+  box-sizing: border-box !important;
+}
+
 .splash-heading-title {
-  text-align: left;
-  margin-bottom: 22px;
+  text-align: left !important;
+  margin-bottom: 22px !important;
 }
 
 .splash-heading-title h2 {
-  margin: 0 0 6px;
-  color: #292524;
-  font-size: clamp(22px, 2.2vw, 28px);
-  font-weight: 700;
-  letter-spacing: -.035em;
+  margin: 0 0 6px !important;
+  color: #292524 !important;
+  font-size: clamp(22px, 2.2vw, 28px) !important;
+  font-weight: 700 !important;
+  letter-spacing: -.035em !important;
+  line-height: 1.25 !important;
 }
 
 .splash-heading-title p {
-  margin: 0;
-  color: #897B7E;
-  font-size: 12.5px;
-  line-height: 1.5;
+  margin: 0 !important;
+  color: #897B7E !important;
+  font-size: 12.5px !important;
+  line-height: 1.5 !important;
 }
 
-/* CHECKLIST STEPS GIMIK */
-.splash-steps-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 22px;
-}
-
-.splash-step-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 12.5px;
-  font-weight: 500;
-  color: #A99A9D; /* Mode pending */
-  transition: all 0.3s ease;
-}
-
-/* State Loading (Spinner Mini Burgundy) */
-.splash-step-item.is-loading {
-  color: #824653;
-  font-weight: 600;
-}
-
-.splash-step-item.is-loading .step-icon::before {
-  content: "";
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  border: 2px solid rgba(130, 70, 83, 0.2);
-  border-top-color: #824653;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-/* State Done (Centang Hijau) */
-.splash-step-item.is-done {
-  color: #16a34a;
-  font-weight: 600;
-}
-
-.splash-step-item.is-done .step-icon::before {
-  content: "✓";
-  font-weight: 800;
-  color: #16a34a;
-}
-
-.step-icon {
-  width: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-/* KAPSUL PROGRESS BAR HANGAT (HARMONIS) */
-.splash-progress-container {
-  width: 100%;
-  height: 10px;
-  background-color: #E2C4BD;
-  border-radius: 100px;
-  overflow: hidden;
-  position: relative;
-  border: 1px solid #D5B4AC;
-}
-
-.splash-progress-bar {
-  height: 100%;
-  width: 45%;
-  background: #A66F7A;
-  border-radius: 100px;
-  position: absolute;
-  left: -45%;
-  box-shadow: 0 0 6px rgba(166, 111, 122, 0.4);
-  animation: indeterminateLoading 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-}
-
-/* RESPONSIVE LAYAR HP (PERSISIS SAMA LOGIN) */
+/* RESPONSIVE LAYAR HP (OTOMATIS JADI 1 KOLOM) */
 @media (max-width: 820px) {
-  #initialSplashLoader { padding: 18px; }
   #initialSplashLoader .container-login {
-    width: min(560px, calc(100vw - 36px)) !important;
-    max-width: 560px !important;
     grid-template-columns: 1fr !important;
-    border-radius: 23px;
+    width: min(560px, calc(100vw - 36px)) !important;
   }
-  #initialSplashLoader .login-visual { min-height: 180px; padding: 20px; }
-  #initialSplashLoader .login-content { padding: 28px clamp(20px, 6vw, 40px) 24px; }
+  #initialSplashLoader .login-visual {
+    min-height: 180px !important;
+  }
 }
