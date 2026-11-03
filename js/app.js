@@ -203,18 +203,10 @@ function updateProgress(val) {
   document.getElementById("progressText").innerText = val + "%";
 }
 
+// GANTI FUNGSI loadStudents() LAMA DENGAN VERSI BERSIH INI:
 function loadStudents() {
-  const fakeProgress = setInterval(() => {
-    if (progress < 90) {
-      progress += 5;
-      updateProgress(progress);
-    }
-  }, 100);
-
   runGasApi("getScannerDashboardData")
     .then(data => {
-      clearInterval(fakeProgress);
-
       if (!data || data.success === false) {
         console.error("Gagal memuat data siswa:", data);
         showCustomAlert("⚠️", (data && data.message) || "Server gagal memuat data siswa.");
@@ -262,9 +254,7 @@ function loadStudents() {
       if (typeof renderHallOfFameUI === "function") renderHallOfFameUI();
       updateActiveLevelsBadge();
 
-      progress = 100;
-      updateProgress(100);
-
+      // Pre-fetch foto ke browser cache
       setTimeout(() => {
         Object.keys(students).forEach(nis => {
           if (students[nis].photo) {
@@ -273,8 +263,9 @@ function loadStudents() {
             if (imgCache.decode) imgCache.decode().catch(() => {});
           }
         });
-      }, 500);
+      }, 300);
 
+      // Selesai loading -> Munculkan Dashboard Scan
       setTimeout(() => {
         const loader = document.getElementById("loader");
         const scanArea = document.getElementById("scanArea");
@@ -283,26 +274,12 @@ function loadStudents() {
         if (input) input.focus();
         updateOfflineBadge();
         setTimeout(autoSyncIfOnline, 2000);
-      }, 300);
+      }, 200);
 
       const totalSemua = Object.keys(students).length;
-      let countTemporer = 0;
-
-      Object.values(students).forEach(s => {
-        if (s.jamMasukKhusus || s.jamPulangKhusus) {
-          countTemporer++;
-        }
-      });
-
-      const countReguler = totalSemua - countTemporer;
-
-      console.log(
-        `✅ Data siswa berhasil dimuat: Total ${totalSemua} siswa ` +
-        `(${countReguler} Reguler, ${countTemporer} Temporer/Jadwal Khusus)`
-      );
+      console.log(`✅ Data siswa berhasil dimuat: Total ${totalSemua} siswa`);
     })
     .catch(error => {
-      clearInterval(fakeProgress);
       console.error("❌ Error loadStudents:", error);
       const loader = document.getElementById("loader");
       if (loader) loader.style.display = "none";
