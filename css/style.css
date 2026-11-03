@@ -1607,7 +1607,7 @@ body.effects-disabled .idle-container {
 }
 
 /* ==========================================================================
-   INITIAL BOOT SPLASH SCREEN (PERSISIS SAMA DENGAN TEMA LOGIN PIKET)
+   INITIAL BOOT SPLASH SCREEN (PERSIS SAMA DENGAN TEMA LOGIN PIKET)
    ========================================================================== */
 #initialSplashLoader {
   position: fixed;
@@ -1642,7 +1642,69 @@ body.effects-disabled .idle-container {
   box-shadow: 0 24px 70px rgba(83,45,54,.13);
 }
 
-/* HEADER TITLE TANPA LOGO */
+/* ==========================================================================
+   PANEL KIRI (TEMPAT GAMBAR ILUSTRASI TAMPIL)
+   ========================================================================== */
+#initialSplashLoader .login-visual {
+  position: relative;
+  min-height: 425px;
+  overflow: hidden;
+  background: #E8D7D9;
+  display: flex;
+  align-items: flex-end;
+  padding: 22px;
+  box-sizing: border-box;
+  isolation: isolate;
+}
+
+#initialSplashLoader .login-visual::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("../assets/login-illustration.png") center center / cover no-repeat;
+  z-index: -2;
+}
+
+#initialSplashLoader .login-visual::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(111,57,69,0) 36%, rgba(75,37,46,.82) 100%);
+  z-index: -1;
+}
+
+#initialSplashLoader .visual-copy { 
+  color: #fff; 
+  text-shadow: 0 2px 12px rgba(40,15,20,.22); 
+}
+
+#initialSplashLoader .visual-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 7px 12px;
+  border: 1px solid rgba(255,255,255,.38);
+  border-radius: 999px;
+  background: rgba(130,70,83,.36);
+  backdrop-filter: blur(8px);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+#initialSplashLoader .visual-copy p { 
+  max-width: 330px; 
+  margin: 0; 
+  font-size: 13px; 
+  line-height: 1.8; 
+  color: rgba(255,255,255,.94); 
+}
+
+/* ==========================================================================
+   PANEL KANAN (HEADER, CHECKLIST & PROGRESS BAR)
+   ========================================================================== */
 .splash-heading-title {
   text-align: left;
   margin-bottom: 22px;
@@ -1740,7 +1802,7 @@ body.effects-disabled .idle-container {
   animation: indeterminateLoading 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
-/* RESPONSIVE LAYAR HP (PERSISIS SAMA LOGIN) */
+/* RESPONSIVE LAYAR HP */
 @media (max-width: 820px) {
   #initialSplashLoader { padding: 18px; }
   #initialSplashLoader .container-login {
