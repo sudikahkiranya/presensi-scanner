@@ -22,12 +22,57 @@
     </div>
   </div>
 
-  <!-- KODE LAMA LOADER DITUKAR DENGAN INI -->
-  <div id="loader">
-    <h1>Memuat Data Siswa</h1>
-    <div class="progress-container">
-      <div class="progress-bar"></div>
-    </div>
+  <!-- INITIAL FULL-SCREEN BOOT SPLASH (MATCHING LOGIN PIKET) -->
+  <div id="initialSplashLoader">
+    <main class="container-login">
+      
+      <!-- PANEL KIRI: VISUAL ARTWORK SAMA DENGAN LOGIN -->
+      <section class="login-visual" aria-label="Informasi aplikasi">
+        <div class="visual-copy">
+          <div class="visual-eyebrow">
+            <span aria-hidden="true">✦</span> SISENSI
+          </div>
+          <p>Jikalau bisa tidak sulit kenapa harus tidak mudah.</p>
+        </div>
+      </section>
+
+      <!-- PANEL KANAN: STEP CHECKLIST BOOT (TANPA LOGO SEKOLAH) -->
+      <section class="login-content" style="align-items: stretch; justify-content: center;">
+        
+        <!-- TITLE HEADER TANPA LOGO -->
+        <div class="splash-heading-title">
+          <h2>Portal Presensi Piket</h2>
+          <p>Menyiapkan sistem &amp; basis data presensi...</p>
+        </div>
+
+        <!-- CHECKLIST STEP GIMIK -->
+        <div class="splash-steps-wrapper">
+          <div class="splash-step-item" id="stepSekolah">
+            <span class="step-icon"></span>
+            <span class="step-label">Memuat konfigurasi data sekolah...</span>
+          </div>
+          <div class="splash-step-item" id="stepConfig">
+            <span class="step-icon"></span>
+            <span class="step-label">Memuat konfigurasi jam presensi...</span>
+          </div>
+          <div class="splash-step-item" id="stepSiswa">
+            <span class="step-icon"></span>
+            <span class="step-label">Memuat database siswa aktif...</span>
+          </div>
+          <div class="splash-step-item" id="stepFoto">
+            <span class="step-icon"></span>
+            <span class="step-label">Menyiapkan direktori foto siswa...</span>
+          </div>
+        </div>
+
+        <!-- KAPSUL PROGRESS BAR HANGAT (BURGUNDY & ROSE GOLD) -->
+        <div class="splash-progress-container">
+          <div class="splash-progress-bar"></div>
+        </div>
+
+        <footer class="login-footer">© SISENSI v 5.1</footer>
+      </section>
+    </main>
   </div>
 
   <div id="scanArea" class="dashboard-container" style="display:none">
