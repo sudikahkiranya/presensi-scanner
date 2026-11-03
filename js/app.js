@@ -252,6 +252,22 @@ function loadStudents() {
 
         students = data.students || {};
 
+        // 🚀 INJEKSI MODULAR: Set Nama Sekolah secara dinamis dari config backend
+        if (data.namaSekolah) {
+          const headerTitleEl = document.querySelector("#topHeaderBanner h1, .header-title-sekolah");
+          if (headerTitleEl) {
+            headerTitleEl.innerText = `Presensi ${data.namaSekolah}`;
+          }
+        }
+
+        // 🚀 INJEKSI MODULAR: Set Logo Sekolah secara dinamis dari config backend
+        if (data.logoSekolah) {
+          const logoElements = document.querySelectorAll(".logo-sekolah-img, .logo-idle-mode");
+          logoElements.forEach(img => {
+            img.src = data.logoSekolah;
+          });
+        }
+
         if (data.configHariIni) {
           activeConfig = data.configHariIni;
           window.scannerDefaultConfig = JSON.parse(JSON.stringify(data.configHariIni));
