@@ -501,33 +501,74 @@ input#nis:focus {
 .sync-overlay-text { font-size: 19px; font-weight: 800; color: #dd9787; }
 .sync-overlay-sub { font-size: 13.5px; font-weight: 600; color: #64748b; line-height: 1.4; max-width: 320px; }
 
+/* ==========================================================================
+   LOADER PROGRESS BAR KAPSUL (BURGUNDY - ROSE GOLD)
+   ========================================================================== */
 #loader {
-  font-size: 18px;
-  padding: 30px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 32px 24px;
   grid-column: span 2;
-  background: white;
+  background: #ffffff;
   border-radius: 16px;
   box-shadow: 0 8px 22px rgba(74, 58, 30, 0.10), 0 2px 6px rgba(15, 23, 42, 0.04);
-  max-width: 500px;
+  max-width: 440px;
   margin: 40px auto 0 auto;
   width: 100%;
   text-align: center;
+  box-sizing: border-box;
 }
 
-#progressBar {
-  width: 80%;
-  height: 12px;
-  background: #e2e8f0;
-  border-radius: 10px;
+#loader h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  letter-spacing: -0.01em;
+}
+
+/* OUTLINE PROGRESS BAR (KAPSUL BURGUNDY SANGAT GELAP) */
+.progress-container {
+  width: 100%;
+  max-width: 380px;
+  height: 14px;
+  background-color: #582a35; /* Base Burgundy Gelap */
+  border-radius: 100px;
   overflow: hidden;
-  margin: 15px auto 0 auto;
+  position: relative;
+  border: 1px solid #421e27;
+  box-sizing: border-box;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-#bar {
+/* TRACK BAR (ANIMASI ISI ROSE GOLD - BURGUNDY METALLIC) */
+.progress-bar {
   height: 100%;
-  width: 0%;
-  background: #dd9787;
-  transition: width 0.1s ease;
+  width: 45%;
+  background: linear-gradient(90deg, #dd9787, #e3a89b, #dd9787); /* Highlight Rose Gold Glowing */
+  border-radius: 100px;
+  position: absolute;
+  left: -45%;
+  box-shadow: 0 0 10px rgba(221, 151, 135, 0.5);
+  animation: indeterminateLoading 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Animasi mengalir lancar dari kiri ke kanan */
+@keyframes indeterminateLoading {
+  0% {
+    left: -45%;
+    width: 30%;
+  }
+  50% {
+    width: 55%; /* Meregang di tengah */
+  }
+  100% {
+    left: 100%;
+    width: 30%;
+  }
 }
 
 /* ==========================================================================
