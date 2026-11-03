@@ -1606,7 +1606,6 @@ body.effects-disabled .idle-container {
   body.effects-enabled .kelas-item-compact.attendance-pulse { animation-duration: 0.01ms !important; }
 }
 
-
 /* ==========================================================================
    FIX SPLASH BOOT LAYOUT (2 KOLOM RAPI SAMA DENGAN LOGIN)
    ========================================================================== */
@@ -1657,6 +1656,7 @@ body.effects-disabled .idle-container {
   box-sizing: border-box !important;
 }
 
+/* FIX PATH GAMBAR ILUSTRASI SPASH */
 #initialSplashLoader .login-visual::before {
   content: "" !important;
   position: absolute !important;
@@ -1718,4 +1718,43 @@ body.effects-disabled .idle-container {
   #initialSplashLoader .login-visual {
     min-height: 180px !important;
   }
+}
+
+/* ==========================================================================
+   PROGRESS BAR KAPSUL SPLASH BOOT & FOOTER SPACING
+   ========================================================================== */
+.splash-progress-container {
+  width: 100% !important;
+  height: 10px !important;
+  min-height: 10px !important;
+  background-color: #E2C4BD !important;
+  border-radius: 100px !important;
+  overflow: hidden !important;
+  position: relative !important;
+  border: 1px solid #D5B4AC !important;
+  margin-top: 18px !important;
+  margin-bottom: 20px !important;
+  box-sizing: border-box !important;
+  display: block !important;
+}
+
+.splash-progress-bar {
+  height: 100% !important;
+  width: 45% !important;
+  background: #A66F7A !important;
+  border-radius: 100px !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: -45% !important;
+  box-shadow: 0 0 8px rgba(166, 111, 122, 0.4) !important;
+  animation: indeterminateLoading 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite !important;
+}
+
+#initialSplashLoader .login-footer {
+  margin-top: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  color: #9A8B8D !important;
+  font-size: 11px !important;
 }
