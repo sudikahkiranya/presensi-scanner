@@ -30,42 +30,47 @@
     <section class="login-visual" aria-label="Informasi aplikasi">
       <div class="visual-copy">
         <div class="visual-eyebrow">
-          <span aria-hidden="true">✦</span> SISENSI
+          <!-- <span aria-hidden="true">✦</span> SISENSI
         </div>
-        <p>Jikalau bisa tidak sulit kenapa harus tidak mudah.</p>
+        <p>Jikalau bisa tidak sulit kenapa harus tidak mudah.</p> -->
       </div>
     </section>
 
     <!-- PANEL KANAN: STEP CHECKLIST & PROGRESS BAR -->
     <section class="login-content">
       
-      <!-- HEADER TITLE -->
+      <!-- HEADER TITLE BARU DENGAN IKON SCAN SVG -->
       <div class="splash-heading-title">
-        <h2>Portal Presensi Piket</h2>
-        <p>Menyiapkan sistem &amp; basis data presensi...</p>
+        <div class="splash-title-row">
+          <svg class="splash-scan-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+            <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+            <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+            <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+            <path d="M8 12h8" />
+            <path d="M12 8v8" />
+          </svg>
+          <h2>Presensi Siswa</h2>
+        </div>
       </div>
 
-      <!-- CHECKLIST STEP GIMIK (JAM PASIR -> CEKLIS) -->
+      <!-- CHECKLIST STEP (3 ITEM RINGKAS) -->
       <div class="splash-steps-wrapper">
         <div class="splash-step-item" id="stepSekolah">
           <span class="step-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" stroke-width="2.5"></circle></svg></span>
-          <span class="step-label">Memuat profil &amp; data sekolah...</span>
+          <span class="step-label">Memuat profil sekolah...</span>
         </div>
         <div class="splash-step-item" id="stepSiswa">
           <span class="step-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" stroke-width="2.5"></circle></svg></span>
           <span class="step-label">Memuat database siswa aktif...</span>
         </div>
-        <div class="splash-step-item" id="stepFoto">
-          <span class="step-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" stroke-width="2.5"></circle></svg></span>
-          <span class="step-label">Pre-loading berkas foto siswa...</span>
-        </div>
         <div class="splash-step-item" id="stepConfig">
           <span class="step-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" stroke-width="2.5"></circle></svg></span>
-          <span class="step-label">Sinkronisasi konfigurasi presensi...</span>
+          <span class="step-label">Memuat konfigurasi presensi hari ini...</span>
         </div>
       </div>
 
-      <!-- KAPSUL PROGRESS BAR (LEBAR DIPERPATUT & COMPACT) -->
+      <!-- KAPSUL PROGRESS BAR COMPACT -->
       <div class="splash-progress-container">
         <div class="splash-progress-bar"></div>
       </div>

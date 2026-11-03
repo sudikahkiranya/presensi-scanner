@@ -234,66 +234,59 @@ function setSplashStep(stepId, state) {
 }
 
 function loadStudents() {
-  // Step 1: Jam pasir nangkut di sini selagi menunggu respon asli dari Apps Script
+  // 1. Step 1: Profil Sekolah Jalan Kilat
   setSplashStep("stepSekolah", "is-loading");
 
-  runGasApi("getScannerDashboardData")
-    .then(data => {
-      if (!data || data.success === false) {
-        showCustomAlert("⚠️", (data && data.message) || "Server gagal memuat data.");
-        return;
-      }
+  setTimeout(() => {
+    setSplashStep("stepSekolah", "is-done");
+    
+    // 2. Step 2: DATABASE SISWA AKTIF -> JAM PASIR NANGKUT DI SINI PANGGIL API
+    setSplashStep("stepSiswa", "is-loading");
 
-      students = data.students || {};
+    runGasApi("getScannerDashboardData")
+      .then(data => {
+        if (!data || data.success === false) {
+          showCustomAlert("⚠️", (data && data.message) || "Server gagal memuat data.");
+          return;
+        }
 
-      if (data.configHariIni) {
-        activeConfig = data.configHariIni;
-        window.scannerDefaultConfig = JSON.parse(JSON.stringify(data.configHariIni));
-      }
+        students = data.students || {};
 
-      loadLocalOverrideJam();
+        if (data.configHariIni) {
+          activeConfig = data.configHariIni;
+          window.scannerDefaultConfig = JSON.parse(JSON.stringify(data.configHariIni));
+        }
 
-      totalHadir = Number(data.totalHadirAwal || 0);
-      const totalHadirEl = document.getElementById("totalHadirText");
-      if (totalHadirEl) totalHadirEl.innerText = totalHadir;
+        loadLocalOverrideJam();
 
-      if (Array.isArray(data.listHadirAwal)) {
-        sudahHadirHariIni = new Set(data.listHadirAwal.map(item => typeof item === "object" ? String(item.nis) : String(item)));
-        window.serverEarlyBirds = data.listHadirAwal;
-      }
+        totalHadir = Number(data.totalHadirAwal || 0);
+        const totalHadirEl = document.getElementById("totalHadirText");
+        if (totalHadirEl) totalHadirEl.innerText = totalHadir;
 
-      totalPulang = Number(data.totalPulangAwal || 0);
-      const totalPulangEl = document.getElementById("totalPulangText");
-      if (totalPulangEl) totalPulangEl.innerText = totalPulang;
+        if (Array.isArray(data.listHadirAwal)) {
+          sudahHadirHariIni = new Set(data.listHadirAwal.map(item => typeof item === "object" ? String(item.nis) : String(item)));
+          window.serverEarlyBirds = data.listHadirAwal;
+        }
 
-      if (Array.isArray(data.listPulangAwal)) {
-        sudahPulangHariIni = new Set(data.listPulangAwal.map(item => typeof item === "object" ? String(item.nis) : String(item)));
-      }
+        totalPulang = Number(data.totalPulangAwal || 0);
+        const totalPulangEl = document.getElementById("totalPulangText");
+        if (totalPulangEl) totalPulangEl.innerText = totalPulang;
 
-      if (data.totalSiswaPerJurusan) totalSiswaPerJurusan = data.totalSiswaPerJurusan;
+        if (Array.isArray(data.listPulangAwal)) {
+          sudahPulangHariIni = new Set(data.listPulangAwal.map(item => typeof item === "object" ? String(item.nis) : String(item)));
+        }
 
-      if (data.perJurusanAwal) {
-        Object.keys(countsJurusan).forEach(key => { countsJurusan[key] = Number(data.perJurusanAwal[key]) || 0; });
-        renderJurusanUI();
-      }
+        if (data.totalSiswaPerJurusan) totalSiswaPerJurusan = data.totalSiswaPerJurusan;
 
-      if (typeof renderHallOfFameUI === "function") renderHallOfFameUI();
-      updateActiveLevelsBadge();
+        if (data.perJurusanAwal) {
+          Object.keys(countsJurusan).forEach(key => { countsJurusan[key] = Number(data.perJurusanAwal[key]) || 0; });
+          renderJurusanUI();
+        }
 
-      // =========================================================================
-      // ALUR TRANSISI MENGALIR HALUS (SETELAH DATA SERVER MASUK)
-      // =========================================================================
+        if (typeof renderHallOfFameUI === "function") renderHallOfFameUI();
+        updateActiveLevelsBadge();
 
-      // Step 1 Selesai -> Lanjut Step 2: Database Siswa Aktif
-      setSplashStep("stepSekolah", "is-done");
-      setSplashStep("stepSiswa", "is-loading");
-
-      setTimeout(() => {
-        // Step 2 Selesai -> Lanjut Step 3: Pre-loading Berkas Foto
-        setSplashStep("stepSiswa", "is-done");
-        setSplashStep("stepFoto", "is-loading");
-
-        // Pre-fetch foto ke cache browser
+        // Pre-fetch foto siswa ke cache browser
         Object.keys(students).forEach(nis => {
           if (students[nis].photo) {
             const imgCache = new Image();
@@ -302,46 +295,44 @@ function loadStudents() {
           }
         });
 
+        // 2. Step 2 (Database Siswa) Selesai
+        setSplashStep("stepSiswa", "is-done");
+        
+        // 3. Step 3: Konfigurasi Presensi Hari Ini
+        setSplashStep("stepConfig", "is-loading");
+
         setTimeout(() => {
-          // Step 3 Selesai -> Lanjut Step 4: Sinkronisasi Konfigurasi Presensi
-          setSplashStep("stepFoto", "is-done");
-          setSplashStep("stepConfig", "is-loading");
+          setSplashStep("stepConfig", "is-done");
 
+          // SMOOTH TRANSISI FADE OUT KE DASHBOARD
           setTimeout(() => {
-            // Semua Step Selesai!
-            setSplashStep("stepConfig", "is-done");
+            const splash = document.getElementById("initialSplashLoader");
+            const scanArea = document.getElementById("scanArea");
+            const topBanner = document.getElementById("topHeaderBanner");
 
-            // Smooth Transisi Fade Out ke Dashboard
-            setTimeout(() => {
-              const splash = document.getElementById("initialSplashLoader");
-              const scanArea = document.getElementById("scanArea");
-              const topBanner = document.getElementById("topHeaderBanner");
+            if (splash) {
+              splash.style.transition = "opacity 0.4s ease";
+              splash.style.opacity = "0";
+              setTimeout(() => splash.style.display = "none", 400);
+            }
 
-              if (splash) {
-                splash.style.transition = "opacity 0.4s ease";
-                splash.style.opacity = "0";
-                setTimeout(() => splash.style.display = "none", 400);
-              }
+            if (topBanner) topBanner.style.display = "flex";
+            if (scanArea) scanArea.style.display = "grid";
+            
+            if (input) input.focus();
+            updateOfflineBadge();
+            setTimeout(autoSyncIfOnline, 1500);
+          }, 300);
 
-              if (topBanner) topBanner.style.display = "flex";
-              if (scanArea) scanArea.style.display = "grid";
-              
-              if (input) input.focus();
-              updateOfflineBadge();
-              setTimeout(autoSyncIfOnline, 1500);
-            }, 300);
+        }, 350); // Jeda singkat step 3 -> done
 
-          }, 400); // Jeda Step 4 -> Done
+      })
+      .catch(error => {
+        console.error("❌ Error loadStudents:", error);
+        showCustomAlert("❌", "Gagal mengambil data dari server. Periksa koneksi backend.");
+      });
 
-        }, 450); // Jeda Step 3 -> Step 4
-
-      }, 400); // Jeda Step 2 -> Step 3
-
-    })
-    .catch(error => {
-      console.error("❌ Error loadStudents:", error);
-      showCustomAlert("❌", "Gagal mengambil data dari server. Periksa koneksi backend.");
-    });
+  }, 250); // Jeda kilat step 1 -> step 2
 }
 
 window.onload = loadStudents;
