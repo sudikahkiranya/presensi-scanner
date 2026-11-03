@@ -1771,7 +1771,9 @@ body.effects-disabled .idle-container {
   line-height: 1.5;
 }
 
-/* CHECKLIST STEPS GIMIK (JAM PASIR -> CEKLIS) */
+/* ==========================================================================
+   CHECKLIST STEPS SVG ICONS & PULSE ANIMATION
+   ========================================================================== */
 .splash-steps-wrapper {
   display: flex;
   flex-direction: column;
@@ -1786,23 +1788,14 @@ body.effects-disabled .idle-container {
   gap: 10px;
   font-size: 13px;
   font-weight: 500;
-  color: #A99A9D; /* State pending (abu-abu) */
-  transition: all 0.25s ease;
-}
-
-.splash-step-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13px;
-  font-weight: 500;
-  color: #A99A9D; /* State pending (abu-abu) */
+  color: #94a3b8; /* Mode pending */
+  opacity: 0.45;   /* Dibuat lebih pudar saat menunggu giliran */
   transition: all 0.25s ease;
 }
 
 .step-icon {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1810,44 +1803,52 @@ body.effects-disabled .idle-container {
 }
 
 .step-icon svg {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   stroke-width: 2.2;
   stroke-linecap: round;
   stroke-linejoin: round;
   fill: none;
 }
 
-/* State Pending (Bulatan Ring Abu) */
+/* State Pending (Bulatan Ring Abu Kecil & Pudar) */
 .splash-step-item .step-icon svg {
   stroke: #cbd5e1;
 }
 
-/* State In-Progress (SVG Jam Pasir Burgundy & Flip Animasi) */
+/* State In-Progress (SVG Jam Pasir Burgundy & Pulse Halus - Tanpa Muter) */
 .splash-step-item.is-loading {
   color: #824653 !important;
   font-weight: 600;
+  opacity: 1 !important; /* Dibuat tegas terang saat aktif */
 }
 
 .splash-step-item.is-loading .step-icon svg {
   stroke: #824653;
-  animation: hourglassRotate 1.2s infinite ease-in-out;
+  animation: hourglassSoftPulse 1.2s infinite ease-in-out;
 }
 
 /* State Completed (SVG Ceklis Hijau Solid) */
 .splash-step-item.is-done {
   color: #16a34a !important;
   font-weight: 600;
+  opacity: 1 !important;
 }
 
 .splash-step-item.is-done .step-icon svg {
   stroke: #16a34a;
 }
 
-@keyframes hourglassRotate {
-  0% { transform: rotate(0deg) scale(1); }
-  50% { transform: rotate(180deg) scale(1.15); }
-  100% { transform: rotate(180deg) scale(1); }
+/* Animasi Pulse Halus Kembang-Kempis (NO ROTATE) */
+@keyframes hourglassSoftPulse {
+  0%, 100% {
+    transform: scale(0.88);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
 }
 
 /* PROGRESS BAR COMPACT (TIDAK OVER-FIT / MENEMPEL DI TEPI) */

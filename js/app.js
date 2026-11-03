@@ -203,10 +203,10 @@ function updateProgress(val) {
   document.getElementById("progressText").innerText = val + "%";
 }
 
-// SVG Icon String Definitions
+// SVG Icon Definitions
 const SVG_ICONS = {
-  // Bulatan Pending
-  pending: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle></svg>`,
+  // Bulatan Pending (Ring Kecil Rapi)
+  pending: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" stroke-width="2.5"></circle></svg>`,
   
   // Jam Pasir (Hourglass)
   loading: `<svg viewBox="0 0 24 24"><path d="M5 22h14M5 2h14M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"></path></svg>`,
@@ -234,81 +234,80 @@ function setSplashStep(stepId, state) {
 }
 
 function loadStudents() {
-  // Step 1: Memuat profil & data sekolah (Instan)
+  // 1. Step 1 Jalan Kilat
   setSplashStep("stepSekolah", "is-loading");
 
-  runGasApi("getScannerDashboardData")
-    .then(data => {
-      if (!data || data.success === false) {
-        showCustomAlert("⚠️", (data && data.message) || "Server gagal memuat data.");
-        return;
-      }
+  setTimeout(() => {
+    setSplashStep("stepSekolah", "is-done");
+    
+    // 2. Step 2 Jalan Kilat
+    setSplashStep("stepSiswa", "is-loading");
 
-      students = data.students || {};
+    setTimeout(() => {
+      setSplashStep("stepSiswa", "is-done");
+      
+      // 3. Step 3 Jalan Kilat
+      setSplashStep("stepFoto", "is-loading");
 
-      if (data.configHariIni) {
-        activeConfig = data.configHariIni;
-        window.scannerDefaultConfig = JSON.parse(JSON.stringify(data.configHariIni));
-      }
-
-      loadLocalOverrideJam();
-
-      totalHadir = Number(data.totalHadirAwal || 0);
-      const totalHadirEl = document.getElementById("totalHadirText");
-      if (totalHadirEl) totalHadirEl.innerText = totalHadir;
-
-      if (Array.isArray(data.listHadirAwal)) {
-        sudahHadirHariIni = new Set(data.listHadirAwal.map(item => typeof item === "object" ? String(item.nis) : String(item)));
-        window.serverEarlyBirds = data.listHadirAwal;
-      }
-
-      totalPulang = Number(data.totalPulangAwal || 0);
-      const totalPulangEl = document.getElementById("totalPulangText");
-      if (totalPulangEl) totalPulangEl.innerText = totalPulang;
-
-      if (Array.isArray(data.listPulangAwal)) {
-        sudahPulangHariIni = new Set(data.listPulangAwal.map(item => typeof item === "object" ? String(item.nis) : String(item)));
-      }
-
-      if (data.totalSiswaPerJurusan) totalSiswaPerJurusan = data.totalSiswaPerJurusan;
-
-      if (data.perJurusanAwal) {
-        Object.keys(countsJurusan).forEach(key => { countsJurusan[key] = Number(data.perJurusanAwal[key]) || 0; });
-        renderJurusanUI();
-      }
-
-      if (typeof renderHallOfFameUI === "function") renderHallOfFameUI();
-      updateActiveLevelsBadge();
-
-      // =========================================================================
-      // URUTAN TRANSIKSI SINKRON (SEQUENTIAL STEP TIMING)
-      // =========================================================================
-
-      // 1 Selesai -> Lanjut Step 2: Database Siswa (Tunggu 350ms)
       setTimeout(() => {
-        setSplashStep("stepSekolah", "is-done");
-        setSplashStep("stepSiswa", "is-loading");
+        setSplashStep("stepFoto", "is-done");
+        
+        // 4. STEP 4 AKTIF -> PANGGIL API GAS DI SINI (JAM PASIR NANGKUT DI STEP 4)
+        setSplashStep("stepConfig", "is-loading");
 
-        // 2 Selesai -> Lanjut Step 3: Pre-loading Foto (Tunggu 400ms)
-        setTimeout(() => {
-          setSplashStep("stepSiswa", "is-done");
-          setSplashStep("stepFoto", "is-loading");
-
-          // Cache foto siswa di background
-          Object.keys(students).forEach(nis => {
-            if (students[nis].photo) {
-              const imgCache = new Image();
-              imgCache.src = students[nis].photo;
-              if (imgCache.decode) imgCache.decode().catch(() => {});
+        runGasApi("getScannerDashboardData")
+          .then(data => {
+            if (!data || data.success === false) {
+              showCustomAlert("⚠️", (data && data.message) || "Server gagal memuat data.");
+              return;
             }
-          });
 
-          // 3 Selesai -> Lanjut Step 4: SINKRONISASI KONFIGURASI (HOLD AGAK LAMA)
-          setTimeout(() => {
-            setSplashStep("stepFoto", "is-done");
-            setSplashStep("stepConfig", "is-loading"); // Jam pasir nangkut di sini
+            students = data.students || {};
 
-            // 4 Selesai setelah nunggu 1.2 detik (Efek "Hold 90%" gimik)
+            if (data.configHariIni) {
+              activeConfig = data.configHariIni;
+              window.scannerDefaultConfig = JSON.parse(JSON.stringify(data.configHariIni));
+            }
+
+            loadLocalOverrideJam();
+
+            totalHadir = Number(data.totalHadirAwal || 0);
+            const totalHadirEl = document.getElementById("totalHadirText");
+            if (totalHadirEl) totalHadirEl.innerText = totalHadir;
+
+            if (Array.isArray(data.listHadirAwal)) {
+              sudahHadirHariIni = new Set(data.listHadirAwal.map(item => typeof item === "object" ? String(item.nis) : String(item)));
+              window.serverEarlyBirds = data.listHadirAwal;
+            }
+
+            totalPulang = Number(data.totalPulangAwal || 0);
+            const totalPulangEl = document.getElementById("totalPulangText");
+            if (totalPulangEl) totalPulangEl.innerText = totalPulang;
+
+            if (Array.isArray(data.listPulangAwal)) {
+              sudahPulangHariIni = new Set(data.listPulangAwal.map(item => typeof item === "object" ? String(item.nis) : String(item)));
+            }
+
+            if (data.totalSiswaPerJurusan) totalSiswaPerJurusan = data.totalSiswaPerJurusan;
+
+            if (data.perJurusanAwal) {
+              Object.keys(countsJurusan).forEach(key => { countsJurusan[key] = Number(data.perJurusanAwal[key]) || 0; });
+              renderJurusanUI();
+            }
+
+            if (typeof renderHallOfFameUI === "function") renderHallOfFameUI();
+            updateActiveLevelsBadge();
+
+            // Cache foto siswa di background
+            Object.keys(students).forEach(nis => {
+              if (students[nis].photo) {
+                const imgCache = new Image();
+                imgCache.src = students[nis].photo;
+                if (imgCache.decode) imgCache.decode().catch(() => {});
+              }
+            });
+
+            // Beri jeda halus 400ms setelah API selesai, baru ubah Step 4 jadi Ceklis Hijau
             setTimeout(() => {
               setSplashStep("stepConfig", "is-done");
 
@@ -332,19 +331,19 @@ function loadStudents() {
                 setTimeout(autoSyncIfOnline, 1500);
               }, 300);
 
-            }, 1200); // Durasi nahan di langkah terakhir biar dapet feel "proses berat"
+            }, 400);
 
-          }, 450);
+          })
+          .catch(error => {
+            console.error("❌ Error loadStudents:", error);
+            showCustomAlert("❌", "Gagal mengambil data dari server. Periksa koneksi backend.");
+          });
 
-        }, 400);
+      }, 180);
 
-      }, 350);
+    }, 180);
 
-    })
-    .catch(error => {
-      console.error("❌ Error loadStudents:", error);
-      showCustomAlert("❌", "Gagal mengambil data dari server. Periksa koneksi backend.");
-    });
+  }, 180);
 }
 
 window.onload = loadStudents;
