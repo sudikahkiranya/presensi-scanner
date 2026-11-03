@@ -234,116 +234,114 @@ function setSplashStep(stepId, state) {
 }
 
 function loadStudents() {
-  // 1. Step 1 Jalan Kilat
+  // Step 1: Jam pasir nangkut di sini selagi menunggu respon asli dari Apps Script
   setSplashStep("stepSekolah", "is-loading");
 
-  setTimeout(() => {
-    setSplashStep("stepSekolah", "is-done");
-    
-    // 2. Step 2 Jalan Kilat
-    setSplashStep("stepSiswa", "is-loading");
+  runGasApi("getScannerDashboardData")
+    .then(data => {
+      if (!data || data.success === false) {
+        showCustomAlert("⚠️", (data && data.message) || "Server gagal memuat data.");
+        return;
+      }
 
-    setTimeout(() => {
-      setSplashStep("stepSiswa", "is-done");
-      
-      // 3. Step 3 Jalan Kilat
-      setSplashStep("stepFoto", "is-loading");
+      students = data.students || {};
+
+      if (data.configHariIni) {
+        activeConfig = data.configHariIni;
+        window.scannerDefaultConfig = JSON.parse(JSON.stringify(data.configHariIni));
+      }
+
+      loadLocalOverrideJam();
+
+      totalHadir = Number(data.totalHadirAwal || 0);
+      const totalHadirEl = document.getElementById("totalHadirText");
+      if (totalHadirEl) totalHadirEl.innerText = totalHadir;
+
+      if (Array.isArray(data.listHadirAwal)) {
+        sudahHadirHariIni = new Set(data.listHadirAwal.map(item => typeof item === "object" ? String(item.nis) : String(item)));
+        window.serverEarlyBirds = data.listHadirAwal;
+      }
+
+      totalPulang = Number(data.totalPulangAwal || 0);
+      const totalPulangEl = document.getElementById("totalPulangText");
+      if (totalPulangEl) totalPulangEl.innerText = totalPulang;
+
+      if (Array.isArray(data.listPulangAwal)) {
+        sudahPulangHariIni = new Set(data.listPulangAwal.map(item => typeof item === "object" ? String(item.nis) : String(item)));
+      }
+
+      if (data.totalSiswaPerJurusan) totalSiswaPerJurusan = data.totalSiswaPerJurusan;
+
+      if (data.perJurusanAwal) {
+        Object.keys(countsJurusan).forEach(key => { countsJurusan[key] = Number(data.perJurusanAwal[key]) || 0; });
+        renderJurusanUI();
+      }
+
+      if (typeof renderHallOfFameUI === "function") renderHallOfFameUI();
+      updateActiveLevelsBadge();
+
+      // =========================================================================
+      // ALUR TRANSISI MENGALIR HALUS (SETELAH DATA SERVER MASUK)
+      // =========================================================================
+
+      // Step 1 Selesai -> Lanjut Step 2: Database Siswa Aktif
+      setSplashStep("stepSekolah", "is-done");
+      setSplashStep("stepSiswa", "is-loading");
 
       setTimeout(() => {
-        setSplashStep("stepFoto", "is-done");
-        
-        // 4. STEP 4 AKTIF -> PANGGIL API GAS DI SINI (JAM PASIR NANGKUT DI STEP 4)
-        setSplashStep("stepConfig", "is-loading");
+        // Step 2 Selesai -> Lanjut Step 3: Pre-loading Berkas Foto
+        setSplashStep("stepSiswa", "is-done");
+        setSplashStep("stepFoto", "is-loading");
 
-        runGasApi("getScannerDashboardData")
-          .then(data => {
-            if (!data || data.success === false) {
-              showCustomAlert("⚠️", (data && data.message) || "Server gagal memuat data.");
-              return;
-            }
+        // Pre-fetch foto ke cache browser
+        Object.keys(students).forEach(nis => {
+          if (students[nis].photo) {
+            const imgCache = new Image();
+            imgCache.src = students[nis].photo;
+            if (imgCache.decode) imgCache.decode().catch(() => {});
+          }
+        });
 
-            students = data.students || {};
+        setTimeout(() => {
+          // Step 3 Selesai -> Lanjut Step 4: Sinkronisasi Konfigurasi Presensi
+          setSplashStep("stepFoto", "is-done");
+          setSplashStep("stepConfig", "is-loading");
 
-            if (data.configHariIni) {
-              activeConfig = data.configHariIni;
-              window.scannerDefaultConfig = JSON.parse(JSON.stringify(data.configHariIni));
-            }
+          setTimeout(() => {
+            // Semua Step Selesai!
+            setSplashStep("stepConfig", "is-done");
 
-            loadLocalOverrideJam();
-
-            totalHadir = Number(data.totalHadirAwal || 0);
-            const totalHadirEl = document.getElementById("totalHadirText");
-            if (totalHadirEl) totalHadirEl.innerText = totalHadir;
-
-            if (Array.isArray(data.listHadirAwal)) {
-              sudahHadirHariIni = new Set(data.listHadirAwal.map(item => typeof item === "object" ? String(item.nis) : String(item)));
-              window.serverEarlyBirds = data.listHadirAwal;
-            }
-
-            totalPulang = Number(data.totalPulangAwal || 0);
-            const totalPulangEl = document.getElementById("totalPulangText");
-            if (totalPulangEl) totalPulangEl.innerText = totalPulang;
-
-            if (Array.isArray(data.listPulangAwal)) {
-              sudahPulangHariIni = new Set(data.listPulangAwal.map(item => typeof item === "object" ? String(item.nis) : String(item)));
-            }
-
-            if (data.totalSiswaPerJurusan) totalSiswaPerJurusan = data.totalSiswaPerJurusan;
-
-            if (data.perJurusanAwal) {
-              Object.keys(countsJurusan).forEach(key => { countsJurusan[key] = Number(data.perJurusanAwal[key]) || 0; });
-              renderJurusanUI();
-            }
-
-            if (typeof renderHallOfFameUI === "function") renderHallOfFameUI();
-            updateActiveLevelsBadge();
-
-            // Cache foto siswa di background
-            Object.keys(students).forEach(nis => {
-              if (students[nis].photo) {
-                const imgCache = new Image();
-                imgCache.src = students[nis].photo;
-                if (imgCache.decode) imgCache.decode().catch(() => {});
-              }
-            });
-
-            // Beri jeda halus 400ms setelah API selesai, baru ubah Step 4 jadi Ceklis Hijau
+            // Smooth Transisi Fade Out ke Dashboard
             setTimeout(() => {
-              setSplashStep("stepConfig", "is-done");
+              const splash = document.getElementById("initialSplashLoader");
+              const scanArea = document.getElementById("scanArea");
+              const topBanner = document.getElementById("topHeaderBanner");
 
-              // FADE OUT KE DASHBOARD UTAMA
-              setTimeout(() => {
-                const splash = document.getElementById("initialSplashLoader");
-                const scanArea = document.getElementById("scanArea");
-                const topBanner = document.getElementById("topHeaderBanner");
+              if (splash) {
+                splash.style.transition = "opacity 0.4s ease";
+                splash.style.opacity = "0";
+                setTimeout(() => splash.style.display = "none", 400);
+              }
 
-                if (splash) {
-                  splash.style.transition = "opacity 0.4s ease";
-                  splash.style.opacity = "0";
-                  setTimeout(() => splash.style.display = "none", 400);
-                }
+              if (topBanner) topBanner.style.display = "flex";
+              if (scanArea) scanArea.style.display = "grid";
+              
+              if (input) input.focus();
+              updateOfflineBadge();
+              setTimeout(autoSyncIfOnline, 1500);
+            }, 300);
 
-                if (topBanner) topBanner.style.display = "flex";
-                if (scanArea) scanArea.style.display = "grid";
-                
-                if (input) input.focus();
-                updateOfflineBadge();
-                setTimeout(autoSyncIfOnline, 1500);
-              }, 300);
+          }, 400); // Jeda Step 4 -> Done
 
-            }, 400);
+        }, 450); // Jeda Step 3 -> Step 4
 
-          })
-          .catch(error => {
-            console.error("❌ Error loadStudents:", error);
-            showCustomAlert("❌", "Gagal mengambil data dari server. Periksa koneksi backend.");
-          });
+      }, 400); // Jeda Step 2 -> Step 3
 
-      }, 180);
-
-    }, 180);
-
-  }, 180);
+    })
+    .catch(error => {
+      console.error("❌ Error loadStudents:", error);
+      showCustomAlert("❌", "Gagal mengambil data dari server. Periksa koneksi backend.");
+    });
 }
 
 window.onload = loadStudents;
