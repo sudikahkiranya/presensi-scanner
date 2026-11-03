@@ -203,25 +203,44 @@ function updateProgress(val) {
   document.getElementById("progressText").innerText = val + "%";
 }
 
+// SVG Icon String Definitions
+const SVG_ICONS = {
+  // Bulatan Pending
+  pending: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle></svg>`,
+  
+  // Jam Pasir (Hourglass)
+  loading: `<svg viewBox="0 0 24 24"><path d="M5 22h14M5 2h14M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"></path></svg>`,
+  
+  // Ceklis (Checkmark)
+  done: `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`
+};
+
 function setSplashStep(stepId, state) {
   const el = document.getElementById(stepId);
   if (!el) return;
+  
+  const iconEl = el.querySelector(".step-icon");
   el.classList.remove("is-loading", "is-done");
-  if (state) el.classList.add(state);
+  
+  if (state === "is-loading") {
+    el.classList.add("is-loading");
+    if (iconEl) iconEl.innerHTML = SVG_ICONS.loading;
+  } else if (state === "is-done") {
+    el.classList.add("is-done");
+    if (iconEl) iconEl.innerHTML = SVG_ICONS.done;
+  } else {
+    if (iconEl) iconEl.innerHTML = SVG_ICONS.pending;
+  }
 }
 
 function loadStudents() {
-  // Step 1: Memuat data sekolah
+  // Step 1: Memuat profil & data sekolah (Instan)
   setSplashStep("stepSekolah", "is-loading");
 
   runGasApi("getScannerDashboardData")
     .then(data => {
-      // Done Step 1 & Move to Step 2 (Config Jam)
-      setSplashStep("stepSekolah", "is-done");
-      setSplashStep("stepConfig", "is-loading");
-
       if (!data || data.success === false) {
-        showCustomAlert("⚠️", (data && data.message) || "Server gagal memuat data siswa.");
+        showCustomAlert("⚠️", (data && data.message) || "Server gagal memuat data.");
         return;
       }
 
@@ -234,44 +253,48 @@ function loadStudents() {
 
       loadLocalOverrideJam();
 
-      // Done Step 2 & Move to Step 3 (Database Siswa)
+      totalHadir = Number(data.totalHadirAwal || 0);
+      const totalHadirEl = document.getElementById("totalHadirText");
+      if (totalHadirEl) totalHadirEl.innerText = totalHadir;
+
+      if (Array.isArray(data.listHadirAwal)) {
+        sudahHadirHariIni = new Set(data.listHadirAwal.map(item => typeof item === "object" ? String(item.nis) : String(item)));
+        window.serverEarlyBirds = data.listHadirAwal;
+      }
+
+      totalPulang = Number(data.totalPulangAwal || 0);
+      const totalPulangEl = document.getElementById("totalPulangText");
+      if (totalPulangEl) totalPulangEl.innerText = totalPulang;
+
+      if (Array.isArray(data.listPulangAwal)) {
+        sudahPulangHariIni = new Set(data.listPulangAwal.map(item => typeof item === "object" ? String(item.nis) : String(item)));
+      }
+
+      if (data.totalSiswaPerJurusan) totalSiswaPerJurusan = data.totalSiswaPerJurusan;
+
+      if (data.perJurusanAwal) {
+        Object.keys(countsJurusan).forEach(key => { countsJurusan[key] = Number(data.perJurusanAwal[key]) || 0; });
+        renderJurusanUI();
+      }
+
+      if (typeof renderHallOfFameUI === "function") renderHallOfFameUI();
+      updateActiveLevelsBadge();
+
+      // =========================================================================
+      // URUTAN TRANSIKSI SINKRON (SEQUENTIAL STEP TIMING)
+      // =========================================================================
+
+      // 1 Selesai -> Lanjut Step 2: Database Siswa (Tunggu 350ms)
       setTimeout(() => {
-        setSplashStep("stepConfig", "is-done");
+        setSplashStep("stepSekolah", "is-done");
         setSplashStep("stepSiswa", "is-loading");
 
-        totalHadir = Number(data.totalHadirAwal || 0);
-        const totalHadirEl = document.getElementById("totalHadirText");
-        if (totalHadirEl) totalHadirEl.innerText = totalHadir;
-
-        if (Array.isArray(data.listHadirAwal)) {
-          sudahHadirHariIni = new Set(data.listHadirAwal.map(item => typeof item === "object" ? String(item.nis) : String(item)));
-          window.serverEarlyBirds = data.listHadirAwal;
-        }
-
-        totalPulang = Number(data.totalPulangAwal || 0);
-        const totalPulangEl = document.getElementById("totalPulangText");
-        if (totalPulangEl) totalPulangEl.innerText = totalPulang;
-
-        if (Array.isArray(data.listPulangAwal)) {
-          sudahPulangHariIni = new Set(data.listPulangAwal.map(item => typeof item === "object" ? String(item.nis) : String(item)));
-        }
-
-        if (data.totalSiswaPerJurusan) totalSiswaPerJurusan = data.totalSiswaPerJurusan;
-
-        if (data.perJurusanAwal) {
-          Object.keys(countsJurusan).forEach(key => { countsJurusan[key] = Number(data.perJurusanAwal[key]) || 0; });
-          renderJurusanUI();
-        }
-
-        if (typeof renderHallOfFameUI === "function") renderHallOfFameUI();
-        updateActiveLevelsBadge();
-
-        // Done Step 3 & Move to Step 4 (Direktori Foto)
+        // 2 Selesai -> Lanjut Step 3: Pre-loading Foto (Tunggu 400ms)
         setTimeout(() => {
           setSplashStep("stepSiswa", "is-done");
           setSplashStep("stepFoto", "is-loading");
 
-          // Pre-fetch foto ke cache browser
+          // Cache foto siswa di background
           Object.keys(students).forEach(nis => {
             if (students[nis].photo) {
               const imgCache = new Image();
@@ -280,35 +303,42 @@ function loadStudents() {
             }
           });
 
-          // Done Step 4 (Selesai!)
+          // 3 Selesai -> Lanjut Step 4: SINKRONISASI KONFIGURASI (HOLD AGAK LAMA)
           setTimeout(() => {
             setSplashStep("stepFoto", "is-done");
+            setSplashStep("stepConfig", "is-loading"); // Jam pasir nangkut di sini
 
-            // Smooth Transisi ke Dashboard Utama
+            // 4 Selesai setelah nunggu 1.2 detik (Efek "Hold 90%" gimik)
             setTimeout(() => {
-              const splash = document.getElementById("initialSplashLoader");
-              const scanArea = document.getElementById("scanArea");
-              const topBanner = document.getElementById("topHeaderBanner");
+              setSplashStep("stepConfig", "is-done");
 
-              if (splash) {
-                splash.style.transition = "opacity 0.4s ease";
-                splash.style.opacity = "0";
-                setTimeout(() => splash.style.display = "none", 400);
-              }
+              // FADE OUT KE DASHBOARD UTAMA
+              setTimeout(() => {
+                const splash = document.getElementById("initialSplashLoader");
+                const scanArea = document.getElementById("scanArea");
+                const topBanner = document.getElementById("topHeaderBanner");
 
-              if (topBanner) topBanner.style.display = "flex";
-              if (scanArea) scanArea.style.display = "grid";
-              
-              if (input) input.focus();
-              updateOfflineBadge();
-              setTimeout(autoSyncIfOnline, 1500);
-            }, 300);
+                if (splash) {
+                  splash.style.transition = "opacity 0.4s ease";
+                  splash.style.opacity = "0";
+                  setTimeout(() => splash.style.display = "none", 400);
+                }
 
-          }, 400);
+                if (topBanner) topBanner.style.display = "flex";
+                if (scanArea) scanArea.style.display = "grid";
+                
+                if (input) input.focus();
+                updateOfflineBadge();
+                setTimeout(autoSyncIfOnline, 1500);
+              }, 300);
 
-        }, 300);
+            }, 1200); // Durasi nahan di langkah terakhir biar dapet feel "proses berat"
 
-      }, 250);
+          }, 450);
+
+        }, 400);
+
+      }, 350);
 
     })
     .catch(error => {
