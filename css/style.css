@@ -530,28 +530,28 @@ input#nis:focus {
   letter-spacing: -0.01em;
 }
 
-/* OUTLINE PROGRESS BAR (DISAMAKAN DENGAN HEADER #824653) */
+/* OUTLINE / BACKGROUND BAR DIEM (NGGA PUCET, TETAP STEADY DUSTY ROSE) */
 .progress-container {
   width: 100%;
   max-width: 380px;
   height: 14px;
-  background-color: rgba(130, 70, 83, 0.2); /* Base Burgundy Header dengan opasitas lembut */
+  background-color: #E2C4BD !important; /* Warna soft terracotta hangat, tegas & ga pucet */
   border-radius: 100px;
   overflow: hidden;
   position: relative;
-  border: 1px solid rgba(130, 70, 83, 0.3);
+  border: 1px solid #D5B4AC !important;
   box-sizing: border-box;
 }
 
-/* TRACK BAR (WARNA HEADER SOLID #824653) */
+/* TRACK BAR JALAN (BURGUNDY MUDA / DUSTY ROSE SOLID) */
 .progress-bar {
   height: 100%;
   width: 45%;
-  background: #824653; /* Murni warna header banner */
+  background: #A66F7A !important; /* Burgundy muda khas tema portal */
   border-radius: 100px;
   position: absolute;
   left: -45%;
-  box-shadow: 0 0 8px rgba(130, 70, 83, 0.4);
+  box-shadow: 0 0 6px rgba(166, 111, 122, 0.4);
   animation: indeterminateLoading 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
