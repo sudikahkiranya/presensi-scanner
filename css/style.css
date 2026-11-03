@@ -1765,13 +1765,6 @@ body.effects-disabled .idle-container {
   gap: 12px;
 }
 
-.splash-scan-icon {
-  width: 28px;
-  height: 28px;
-  color: #292524;
-  flex-shrink: 0;
-}
-
 .splash-title-row h2 {
   margin: 0;
   color: #292524;
