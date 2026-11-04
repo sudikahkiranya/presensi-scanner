@@ -25,14 +25,14 @@ let systemConfig = {};
 // 1. Fungsi Tarik Config Mandiri (Meniru Portal Piket)
 async function loadSystemConfig() {
   try {
-    const response = await fetch(`${GAS_API_URL}?action=getSystemConfig`, {
-      method: "GET",
-      redirect: "follow"
-    });
-    const result = await response.json();
+    const result = await runGasApi("getSystemConfig");
 
-    if (result.success && result.data) {
+    if (result && result.success && result.data) {
       systemConfig = result.data;
+      applySystemConfigToUI();
+    } else if (result) {
+      // Jaga-jaga kalau backend mereturn objek datanya langsung
+      systemConfig = result;
       applySystemConfigToUI();
     }
   } catch (err) {
@@ -65,7 +65,7 @@ function applySystemConfigToUI() {
 
   // Update Title Tab Browser
   if (config.nama_sekolah) {
-    document.title = `Presensi - ${config.nama_sekolah}`;
+    document.title = `Presensi | ${config.nama_sekolah}`;
   }
 }
 
