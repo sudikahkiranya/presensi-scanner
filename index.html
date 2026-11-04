@@ -14,13 +14,14 @@
   <!-- TOP HEADER BANNER -->
   <div id="topHeaderBanner">
     <div class="brand-title" id="headerNamaSekolah">Memuat...</div>
-    <div class="left-controls">
-      <div id="statusBar" onclick="handleSyncButtonClick()"><span id="statusText">Checking...</span></div>
-      <button type="button" id="settingsBtn" onclick="openSettingsModal()" title="Konfigurasi" aria-label="Konfigurasi">⚙️</button>
-      <button type="button" id="effectsToggleBtn" class="effects-on" onclick="toggleRekapEffects()" title="Efek Animasi" aria-label="Animasi aktif" aria-pressed="true">🌟</button>
-      <div id="totalHadirBox"><span>Masuk:</span><span id="totalHadirText">0</span></div>
-      <div id="totalPulangBox"><span>Pulang:</span><span id="totalPulangText">0</span></div>
-    </div>
+      <div class="left-controls">
+        <div id="statusBar" onclick="handleSyncButtonClick()"><span id="statusText">Checking...</span></div>
+        <button type="button" id="settingsBtn" onclick="openSettingsModal()" title="Konfigurasi" aria-label="Konfigurasi">⚙️</button>
+        <button type="button" id="effectsToggleBtn" class="effects-on" onclick="toggleRekapEffects()" title="Efek Animasi" aria-label="Animasi aktif" aria-pressed="true">🌟</button>
+        <button type="button" id="themeToggleBtn" onclick="cycleAppTheme()" title="Ganti Tema Warna" aria-label="Ganti Tema Warna">🎨</button>
+        <div id="totalHadirBox"><span>Masuk:</span><span id="totalHadirText">0</span></div>
+        <div id="totalPulangBox"><span>Pulang:</span><span id="totalPulangText">0</span></div>
+      </div>
   </div>
 
   <!-- INITIAL FULL-SCREEN BOOT SPLASH -->
