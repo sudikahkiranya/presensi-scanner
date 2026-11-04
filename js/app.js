@@ -1285,7 +1285,9 @@ function switchTab(tab) {
     requestSuperAdminAccess(function() { switchTab('proteksi'); });
     return;
   }
-  const tabs = ['configJam', 'proteksi', 'export'];
+  
+  // 🚀 Tambahkan 'tampilan' ke dalam array daftar tab ini
+  const tabs = ['configJam', 'tampilan', 'proteksi', 'export'];
 
   tabs.forEach(function (name) {
     const content = document.getElementById('tabContent-' + name);
