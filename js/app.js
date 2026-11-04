@@ -26,6 +26,7 @@ let systemConfig = {};
 async function loadSystemConfig() {
   try {
     const result = await runGasApi("getSystemConfig");
+    console.log("🔍 RESPONS CONFIG DARI SERVER:", JSON.stringify(result));
 
     if (result && result.success && result.data) {
       systemConfig = result.data;
