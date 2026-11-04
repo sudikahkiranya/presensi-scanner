@@ -22,7 +22,7 @@ async function runGasApi(action, payload = {}) {
 // Variabel global untuk menampung config sistem
 let systemConfig = {};
 
-// 1. Fungsi Tarik Config Mandiri (Meniru Portal Piket)
+// 1. Fungsi Tarik Config Mandiri
 async function loadSystemConfig() {
   try {
     const result = await runGasApi("getSystemConfig");
@@ -30,50 +30,54 @@ async function loadSystemConfig() {
     if (result && result.success && result.data) {
       systemConfig = result.data;
       applySystemConfigToUI();
-    } else if (result) {
-      // Jaga-jaga kalau backend mereturn objek datanya langsung
-      systemConfig = result;
+    } else if (result && (result.nama_sekolah || result.NAMA_SEKOLAH || result.data)) {
+      systemConfig = result.data || result;
       applySystemConfigToUI();
     }
   } catch (err) {
-    console.warn("Gagal memuat system config:", err);
+    console.warn("⚠️ Gagal memuat system config:", err);
   }
 }
 
 // 2. Fungsi Terapkan ke UI Dashboard Scanner
 function applySystemConfigToUI() {
-  const config = systemConfig;
-  if (!config) return;
+  const config = systemConfig || {};
 
-  const logoUrl = config.logo_sekolah_direct_url || config.logo_sekolah_url;
-
-  // Injeksi Logo Sekolah secara dinamis
-  const logoElements = document.querySelectorAll(".logo-sekolah-img, .logo-idle-mode");
-  logoElements.forEach(img => {
-    if (logoUrl) {
-      img.src = logoUrl;
-      img.onload = () => img.classList.add("is-loaded");
-      if (img.complete) img.classList.add("is-loaded");
-    }
-  });
+  // Deteksi pintar berbagai kemungkinan key dari spreadsheet
+  const namaSekolah = config.nama_sekolah || config.NAMA_SEKOLAH || config.namaSekolah || config.SCHOOL_NAME || "";
+  const logoUrl = config.logo_sekolah_direct_url || config.logo_sekolah_url || config.LOGO_SEKOLAH || "";
 
   // Injeksi Nama Sekolah di Header Banner
   const headerTitleEl = document.getElementById("headerNamaSekolah");
-  if (headerTitleEl && config.nama_sekolah) {
-    headerTitleEl.innerText = `Presensi ${config.nama_sekolah}`;
+  if (headerTitleEl) {
+    headerTitleEl.innerText = namaSekolah ? `Presensi ${namaSekolah}` : "Presensi Siswa";
+  }
+
+  // Injeksi Logo Sekolah secara dinamis
+  if (logoUrl) {
+    const logoElements = document.querySelectorAll(".logo-sekolah-img, .logo-idle-mode");
+    logoElements.forEach(img => {
+      img.src = logoUrl;
+      img.onload = () => img.classList.add("is-loaded");
+      if (img.complete) img.classList.add("is-loaded");
+    });
+
+    // Update Favicon Tab jika elemennya ada
+    const faviconEl = document.getElementById("appFavicon") || document.querySelector("link[rel*='icon']");
+    if (faviconEl) faviconEl.href = logoUrl;
   }
 
   // Update Title Tab Browser
-  if (config.nama_sekolah) {
-    document.title = `Presensi | ${config.nama_sekolah}`;
+  if (namaSekolah) {
+    document.title = `Presensi | ${namaSekolah}`;
   }
 }
 
-// 3. Panggil saat awal aplikasi dimuat
-window.onload = function() {
-  loadSystemConfig(); // Ambil config sistem (nama & logo) secara asinkron
-  loadStudents();     // Ambil database siswa & presensi
-};
+// 3. Panggil saat awal aplikasi dimuat secara aman
+document.addEventListener("DOMContentLoaded", function() {
+  loadSystemConfig();
+  loadStudents();
+});
 
 function loadRekapEffectsPreference() {
   try {
