@@ -22,6 +22,28 @@ async function runGasApi(action, payload = {}) {
 // Variabel global untuk menampung config sistem
 let systemConfig = {};
 
+// 🚀 Helper Penerap Tema ke DOM, LocalStorage Cache, & Selector UI Modal
+function applyTheme(themeName) {
+  const selectedTheme = themeName || "DEFAULT_BURGUNDY";
+  document.body.setAttribute("data-theme", selectedTheme);
+
+  // Simpan ke cache browser agar saat reload halaman langsung tampil instan (0ms)
+  try {
+    localStorage.setItem("app_user_theme", selectedTheme);
+  } catch (e) {}
+
+  // Update opsi dropdown jika elemen selector di modal settings ada/terbuka
+  const selectEl = document.getElementById("cfgTemaWarna");
+  if (selectEl) {
+    selectEl.value = selectedTheme;
+  }
+}
+
+// 🚀 Handler preview tema real-time saat dipillih dari dropdown modal
+function previewSelectedTheme(themeName) {
+  applyTheme(themeName);
+}
+
 // 1. Fungsi Tarik Config Mandiri
 async function loadSystemConfig() {
   try {
@@ -54,6 +76,16 @@ function applySystemConfigToUI() {
     config.logo_sekolah_direct_url || 
     config.logo_sekolah_url || 
     config.LOGO_SEKOLAH || "";
+
+  // 🚀 0. Injeksi & Sinkronisasi Tema Warna Modular (Priority: Local Cache -> Server -> Fallback)
+  const cachedTheme = localStorage.getItem("app_user_theme");
+  const serverTheme = 
+    config.TEMA_WARNA || 
+    config.tema_warna || 
+    config.THEME || 
+    config.TEMA || "DEFAULT_BURGUNDY";
+
+  applyTheme(cachedTheme || serverTheme);
 
   // 1. Injeksi Nama Sekolah Modular
   const headerTitleEl = document.getElementById("headerNamaSekolah");
@@ -102,6 +134,12 @@ function applySystemConfigToUI() {
 
 // 3. Panggil saat awal aplikasi dimuat secara aman
 document.addEventListener("DOMContentLoaded", function() {
+  // 🚀 Load tema dari LocalStorage detik pertama sebelum fetch API berjalan (Anti-Flicker)
+  const savedLocalTheme = localStorage.getItem("app_user_theme");
+  if (savedLocalTheme) {
+    applyTheme(savedLocalTheme);
+  }
+
   loadSystemConfig();
   loadStudents();
 });

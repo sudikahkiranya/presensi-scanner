@@ -1939,3 +1939,92 @@ body.effects-disabled .idle-container {
   width: 100%;
   padding: 10px;
 }
+
+
+/* ==========================================================================
+   THEME PALETTES & DESIGN SYSTEM TOKENS
+   ========================================================================== */
+:root,
+body[data-theme="DEFAULT_BURGUNDY"] {
+  --primary-accent: #824653;
+  --primary-accent-hover: #6F3945;
+  --glow-rgb: 130, 70, 83;
+  --surface-bg: #f8fafc;
+  --pill-active-bg: #dd9787;
+  --tab-active-bg: #A66F7A;
+  --badge-text: #824653;
+}
+
+body[data-theme="EMERALD_GREEN"] {
+  --primary-accent: #16a34a;
+  --primary-accent-hover: #15803d;
+  --glow-rgb: 22, 163, 74;
+  --surface-bg: #f0fdf4;
+  --pill-active-bg: #4ade80;
+  --tab-active-bg: #16a34a;
+  --badge-text: #166534;
+}
+
+body[data-theme="ROYAL_BLUE"] {
+  --primary-accent: #2563eb;
+  --primary-accent-hover: #1d4ed8;
+  --glow-rgb: 37, 99, 235;
+  --surface-bg: #eff6ff;
+  --pill-active-bg: #60a5fa;
+  --tab-active-bg: #2563eb;
+  --badge-text: #1e40af;
+}
+
+body[data-theme="DARK_STEALTH"] {
+  --primary-accent: #334155;
+  --primary-accent-hover: #1e293b;
+  --glow-rgb: 51, 65, 85;
+  --surface-bg: #f1f5f9;
+  --pill-active-bg: #64748b;
+  --tab-active-bg: #475569;
+  --badge-text: #0f172a;
+}
+
+body[data-theme="WARM_ORANGE"] {
+  --primary-accent: #ea580c;
+  --primary-accent-hover: #c2410c;
+  --glow-rgb: 234, 88, 12;
+  --surface-bg: #fff7ed;
+  --pill-active-bg: #fb923c;
+  --tab-active-bg: #ea580c;
+  --badge-text: #9a3412;
+}
+
+body[data-theme="ELEGANT_GOLD"] {
+  --primary-accent: #ca8a04;
+  --primary-accent-hover: #a16207;
+  --glow-rgb: 202, 138, 4;
+  --surface-bg: #fefce8;
+  --pill-active-bg: #facc15;
+  --tab-active-bg: #ca8a04;
+  --badge-text: #854d0e;
+}
+
+/* Terapkan variabel warna ke elemen utama */
+#topHeaderBanner {
+  background: var(--primary-accent) !important;
+}
+
+.idle-clock-digital {
+  color: var(--primary-accent) !important;
+}
+
+.settings-main-tabs .modal-tab-btn.active,
+.settings-time-subtabs .modal-subtab-btn.active,
+.btn-save {
+  background: var(--tab-active-bg) !important;
+  border-color: var(--tab-active-bg) !important;
+}
+
+.btn-save:hover {
+  background: var(--primary-accent-hover) !important;
+}
+
+.config-jam-switch-option.is-selected {
+  background: var(--pill-active-bg) !important;
+}
