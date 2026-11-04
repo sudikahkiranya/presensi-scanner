@@ -1939,3 +1939,194 @@ body.effects-disabled .idle-container {
   width: 100%;
   padding: 10px;
 }
+
+/* ==========================================================================
+   CSS VARIABLE COLOR PALETTE (THEME ENGINE)
+   ========================================================================== */
+:root, body, body[data-theme="burgundy"] {
+  --theme-primary: #824653;
+  --theme-primary-hover: #6F3945;
+  --theme-glow-rgb: 130, 70, 83;
+  --theme-bg-canvas: #F5F0E7;
+  --theme-surface-soft: #F9F5EF;
+  --theme-border-soft: #E2C4BD;
+}
+
+body[data-theme="green"] {
+  --theme-primary: #15803d;
+  --theme-primary-hover: #166534;
+  --theme-glow-rgb: 22, 163, 74;
+  --theme-bg-canvas: #f0fdf4;
+  --theme-surface-soft: #f7fee7;
+  --theme-border-soft: #bbf7d0;
+}
+
+body[data-theme="blue"] {
+  --theme-primary: #1d4ed8;
+  --theme-primary-hover: #1e40af;
+  --theme-glow-rgb: 37, 99, 235;
+  --theme-bg-canvas: #eff6ff;
+  --theme-surface-soft: #f0f9ff;
+  --theme-border-soft: #bfdbfe;
+}
+
+body[data-theme="orange"] {
+  --theme-primary: #c2410c;
+  --theme-primary-hover: #9a3412;
+  --theme-glow-rgb: 2ea580c;
+  --theme-bg-canvas: #fff7ed;
+  --theme-surface-soft: #fffbeb;
+  --theme-border-soft: #fed7aa;
+}
+
+body[data-theme="purple"] {
+  --theme-primary: #7e22ce;
+  --theme-primary-hover: #6b21a8;
+  --theme-glow-rgb: 147, 51, 234;
+  --theme-bg-canvas: #faf5ff;
+  --theme-surface-soft: #fcf5ff;
+  --theme-border-soft: #e9d5ff;
+}
+
+body[data-theme="gold"] {
+  --theme-primary: #b45309;
+  --theme-primary-hover: #92400e;
+  --theme-glow-rgb: 217, 119, 6;
+  --theme-bg-canvas: #fffbeb;
+  --theme-surface-soft: #fefce8;
+  --theme-border-soft: #fde68a;
+}
+
+body[data-theme="black"] {
+  --theme-primary: #1e293b;
+  --theme-primary-hover: #0f172a;
+  --theme-glow-rgb: 71, 85, 105;
+  --theme-bg-canvas: #f1f5f9;
+  --theme-surface-soft: #f8fafc;
+  --theme-border-soft: #cbd5e1;
+}
+
+body[data-theme="white"] {
+  --theme-primary: #475569;
+  --theme-primary-hover: #334155;
+  --theme-glow-rgb: 148, 163, 184;
+  --theme-bg-canvas: #ffffff;
+  --theme-surface-soft: #f8fafc;
+  --theme-border-soft: #e2e8f0;
+}
+
+/* Hubungkan komponen utama dengan variabel CSS */
+body {
+  background: var(--theme-bg-canvas) !important;
+  transition: background 0.3s ease;
+}
+
+#topHeaderBanner {
+  background: var(--theme-primary) !important;
+  transition: background 0.3s ease;
+}
+
+.idle-clock-digital {
+  color: var(--theme-primary) !important;
+}
+
+/* ==========================================================================
+   THEME PICKER BUTTON & POPOVER STYLES
+   ========================================================================== */
+.theme-picker-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+#themePickerBtn {
+  background: white;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  font-weight: 700;
+  font-size: 18px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s ease, transform 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  color: #334155;
+}
+
+#themePickerBtn:hover {
+  background: #f1f5f9;
+  transform: scale(1.05);
+}
+
+.theme-popover {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%) scale(0.95);
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e2e8f0;
+  z-index: 1000;
+  width: 170px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.theme-popover.is-open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) scale(1);
+}
+
+.theme-popover-header {
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+  margin-bottom: 10px;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.theme-color-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  justify-items: center;
+}
+
+.color-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 1px #cbd5e1;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  padding: 0;
+}
+
+.color-swatch:hover {
+  transform: scale(1.15);
+}
+
+.color-swatch.active {
+  box-shadow: 0 0 0 2px var(--theme-primary) !important;
+  transform: scale(1.1);
+}
+
+.burgundyswatch { background: #824653; }
+.greenswatch { background: #15803d; }
+.blueswatch { background: #1d4ed8; }
+.orangeswatch { background: #c2410c; }
+.purpleswatch { background: #7e22ce; }
+.goldswatch { background: #b45309; }
+.blackswatch { background: #1e293b; }
+.whiteswatch { background: #f8fafc; }

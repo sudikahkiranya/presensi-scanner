@@ -2342,3 +2342,79 @@ document.addEventListener("DOMContentLoaded", () => {
   const logoIdle = document.querySelector(".logo-idle-mode");
   if (logoIdle) applyDominanGlow(logoIdle);
 });
+
+const THEME_STORAGE_KEY = "sisensi_active_theme";
+
+// 1. Inisialisasi Tema Saat Aplikasi Dimuat
+function initThemeEngine() {
+  const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+  const globalTheme = (systemConfig && systemConfig.data) 
+    ? (systemConfig.data.tema_warna || systemConfig.data.TEMA_WARNA)
+    : (systemConfig.tema_warna || "burgundy");
+
+  const themeToApply = savedTheme || String(globalTheme).toLowerCase() || "burgundy";
+  selectTheme(themeToApply, false);
+}
+
+// 2. Toggle Buka/Tutup Popover Colors
+function toggleThemePopover(event) {
+  if (event) event.stopPropagation();
+  const popover = document.getElementById("themePopover");
+  if (popover) {
+    popover.classList.toggle("is-open");
+  }
+}
+
+// 3. Eksekusi Pilih Tema Real-time
+function selectTheme(themeName, isUserAction = true) {
+  const cleanTheme = String(themeName).toLowerCase();
+  
+  // Pasang Atribut data-theme ke Tag <body>
+  document.body.setAttribute("data-theme", cleanTheme);
+
+  // Update State Aktif pada Swatch Bulatan Modal
+  document.querySelectorAll(".color-swatch").forEach(swatch => {
+    swatch.classList.toggle("active", swatch.dataset.theme === cleanTheme);
+  });
+
+  // Re-calculate Glow Logo jika menggunakan variabel RGB
+  const logoIdle = document.querySelector(".logo-idle-mode");
+  if (logoIdle && typeof applyDominanGlow === "function") {
+    applyDominanGlow(logoIdle);
+  }
+
+  if (isUserAction) {
+    // Simpan ke Cache Lokal
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, cleanTheme);
+    } catch (e) {}
+
+    // Tutup Popover Melayang
+    const popover = document.getElementById("themePopover");
+    if (popover) popover.classList.remove("is-open");
+
+    // Kirim Sinkronisasi ke Backend Google Sheets (Optional)
+    if (window.settingsAdminToken) {
+      runGasApi("saveSystemTheme", { theme: cleanTheme, token: window.settingsAdminToken })
+        .catch(e => console.warn("Sync tema ke server gagal:", e));
+    }
+
+    showToast(`Tema visual diubah ke ${cleanTheme.toUpperCase()}!`, "info");
+  }
+}
+
+// 4. Close Popover Saat Klik Sembarang Tempat di Luar Modal
+document.addEventListener("click", function(e) {
+  const popover = document.getElementById("themePopover");
+  const btn = document.getElementById("themePickerBtn");
+  if (popover && popover.classList.contains("is-open")) {
+    if (!popover.contains(e.target) && !btn.contains(e.target)) {
+      popover.classList.remove("is-open");
+    }
+  }
+});
+
+// Panggil inisialisasi tema saat aplikasi siap
+document.addEventListener("DOMContentLoaded", function() {
+  initThemeEngine();
+});
