@@ -19,30 +19,69 @@ async function runGasApi(action, payload = {}) {
   }
 }
 
-// Variabel global untuk menampung config sistem
-let systemConfig = {};
+// ==========================================================================
+// 🎨 SYSTEM THEME ENGINE (MULTI-PRESET & LOCAL CACHE)
+// ==========================================================================
+const THEME_STORAGE_KEY = "sisensi_app_theme";
+const AVAILABLE_THEMES = [
+  { id: "burgundy", name: "Burgundy Default" },
+  { id: "hijau",    name: "Hijau Emerald" },
+  { id: "biru",     name: "Biru Royal" },
+  { id: "merah",    name: "Merah Crimson" },
+  { id: "ungu",     name: "Ungu Deep" },
+  { id: "orange",   name: "Orange Sunset" },
+  { id: "gold",     name: "Gold Luxury" },
+  { id: "hitam",    name: "Hitam Stealth" },
+  { id: "putih",    name: "Putih Minimalis" }
+];
 
-// 🚀 Helper Penerap Tema ke DOM, LocalStorage Cache, & Selector UI Modal
-function applyTheme(themeName) {
-  const selectedTheme = themeName || "DEFAULT_BURGUNDY";
-  document.body.setAttribute("data-theme", selectedTheme);
+let currentThemeIndex = 0;
 
-  // Simpan ke cache browser agar saat reload halaman langsung tampil instan (0ms)
+// 1. Eksekusi Penggantian Tema ke <body> DOM
+function applyThemeToUI(themeId) {
+  const targetTheme = themeId || "burgundy";
+  document.body.setAttribute("data-theme", targetTheme);
+  
+  // Sinkronkan indeks tema aktif
+  const foundIdx = AVAILABLE_THEMES.findIndex(t => t.id === targetTheme);
+  if (foundIdx !== -1) currentThemeIndex = foundIdx;
+}
+
+// 2. Handler Tombol 🎨 (Rotasi Tema Instan)
+function cycleAppTheme() {
+  currentThemeIndex = (currentThemeIndex + 1) % AVAILABLE_THEMES.length;
+  const selectedTheme = AVAILABLE_THEMES[currentThemeIndex];
+  
+  applyThemeToUI(selectedTheme.id);
+  
+  // Simpan pilihan ke LocalStorage
   try {
-    localStorage.setItem("app_user_theme", selectedTheme);
+    localStorage.setItem(THEME_STORAGE_KEY, selectedTheme.id);
   } catch (e) {}
 
-  // Update opsi dropdown jika elemen selector di modal settings ada/terbuka
-  const selectEl = document.getElementById("cfgTemaWarna");
-  if (selectEl) {
-    selectEl.value = selectedTheme;
+  if (typeof showToast === "function") {
+    showToast(`Tema warna diubah ke ${selectedTheme.name}!`, "info");
   }
 }
 
-// 🚀 Handler preview tema real-time saat dipillih dari dropdown modal
-function previewSelectedTheme(themeName) {
-  applyTheme(themeName);
+// 3. Memuat Tema Tersimpan saat Awal Aplikasi Buka
+function loadSavedThemePreference() {
+  let savedTheme = "burgundy";
+  
+  try {
+    const cached = localStorage.getItem(THEME_STORAGE_KEY);
+    if (cached) {
+      savedTheme = cached;
+    } else if (systemConfig && (systemConfig.tema_warna || systemConfig.TEMA_WARNA)) {
+      savedTheme = (systemConfig.tema_warna || systemConfig.TEMA_WARNA).toLowerCase();
+    }
+  } catch (e) {}
+
+  applyThemeToUI(savedTheme);
 }
+
+// Variabel global untuk menampung config sistem
+let systemConfig = {};
 
 // 1. Fungsi Tarik Config Mandiri
 async function loadSystemConfig() {
@@ -77,16 +116,6 @@ function applySystemConfigToUI() {
     config.logo_sekolah_url || 
     config.LOGO_SEKOLAH || "";
 
-  // 🚀 0. Injeksi & Sinkronisasi Tema Warna Modular (Priority: Local Cache -> Server -> Fallback)
-  const cachedTheme = localStorage.getItem("app_user_theme");
-  const serverTheme = 
-    config.TEMA_WARNA || 
-    config.tema_warna || 
-    config.THEME || 
-    config.TEMA || "DEFAULT_BURGUNDY";
-
-  applyTheme(cachedTheme || serverTheme);
-
   // 1. Injeksi Nama Sekolah Modular
   const headerTitleEl = document.getElementById("headerNamaSekolah");
   if (headerTitleEl) {
@@ -102,7 +131,6 @@ function applySystemConfigToUI() {
         img.alt = `Logo ${namaSekolah}`;
       }
 
-      // Handler saat gambar selesai dimuat (hitung ulang glow breath)
       img.onload = () => {
         img.classList.add("is-loaded");
         if (typeof applyDominanGlow === "function") {
@@ -110,7 +138,6 @@ function applySystemConfigToUI() {
         }
       };
 
-      // Handler jika gambar sudah langsung ter-cached oleh browser
       if (img.complete) {
         img.classList.add("is-loaded");
         if (typeof applyDominanGlow === "function") {
@@ -130,16 +157,17 @@ function applySystemConfigToUI() {
   if (namaSekolah) {
     document.title = `Presensi | ${namaSekolah}`;
   }
+
+  // 4. Injeksi Tema Warna dari Sheet (Fallback jika LocalStorage kosong)
+  const temaSheet = (config.tema_warna || config.TEMA_WARNA || "").toLowerCase();
+  if (temaSheet && !localStorage.getItem(THEME_STORAGE_KEY)) {
+    applyThemeToUI(temaSheet);
+  }
 }
 
-// 3. Panggil saat awal aplikasi dimuat secara aman
+// 3. Panggil saat awal aplikasi dimuat secara aman (Instan 0ms)
 document.addEventListener("DOMContentLoaded", function() {
-  // 🚀 Load tema dari LocalStorage detik pertama sebelum fetch API berjalan (Anti-Flicker)
-  const savedLocalTheme = localStorage.getItem("app_user_theme");
-  if (savedLocalTheme) {
-    applyTheme(savedLocalTheme);
-  }
-
+  loadSavedThemePreference(); // Panggil paling atas biar instan tanpa flicker
   loadSystemConfig();
   loadStudents();
 });
@@ -1285,9 +1313,7 @@ function switchTab(tab) {
     requestSuperAdminAccess(function() { switchTab('proteksi'); });
     return;
   }
-  
-  // 🚀 Tambahkan 'tampilan' ke dalam array daftar tab ini
-  const tabs = ['configJam', 'tampilan', 'proteksi', 'export'];
+  const tabs = ['configJam', 'proteksi', 'export'];
 
   tabs.forEach(function (name) {
     const content = document.getElementById('tabContent-' + name);
@@ -2325,57 +2351,15 @@ setInterval(updateConfigIndicators, 60000);
   }
 })();
 
+// ==========================================================================
+// 🌟 GLOW BREATH HANDLER (MANAGED BY CSS THEME PALETTE)
+// ==========================================================================
 function applyDominanGlow(imgElement) {
-  if (!imgElement || !imgElement.src) return;
-
-  // 1. Buat elemen gambar sementara di memori JS
-  const tempImg = new Image();
-  tempImg.crossOrigin = "Anonymous"; // Izin membaca piksel lintas domain
-  tempImg.src = imgElement.src;
-
-  // 2. TUNGGU SAMPAI GAMBAR BENAR-BENAR SIAP 100%
-  tempImg.onload = function() {
-    try {
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-      canvas.width = 50;
-      canvas.height = 50;
-
-      // Gambar ke canvas setelah gambar siap
-      ctx.drawImage(tempImg, 0, 0, 50, 50);
-      const data = ctx.getImageData(0, 0, 50, 50).data;
-
-      let r = 0, g = 0, b = 0, count = 0;
-
-      for (let i = 0; i < data.length; i += 4) {
-        const alpha = data[i + 3];
-        const red = data[i];
-        const green = data[i + 1];
-        const blue = data[i + 2];
-
-        // Abaikan piksel transparan dan piksel yang terlalu putih polos (background)
-        if (alpha > 128 && !(red > 240 && green > 240 && blue > 240)) {
-          r += red;
-          g += green;
-          b += blue;
-          count++;
-        }
-      }
-
-      if (count > 0) {
-        const rgbStr = `${Math.round(r / count)}, ${Math.round(g / count)}, ${Math.round(b / count)}`;
-        imgElement.style.setProperty("--glow-rgb", rgbStr);
-      }
-    } catch (e) {
-      // Fallback warna biru netral (bukan burgundy) jika terhalang CORS
-      imgElement.style.setProperty("--glow-rgb", "37, 99, 235");
-    }
-  };
-
-  // Fallback jika gambar gagal dimuat
-  tempImg.onerror = function() {
-    imgElement.style.setProperty("--glow-rgb", "37, 99, 235");
-  };
+  if (!imgElement) return;
+  
+  // Efek glow sekarang sepenuhnya ditangani oleh CSS Custom Properties (--glow-rgb) 
+  // sesuai data-theme aktif, bebas dari isu CORS Canvas!
+  imgElement.classList.add("is-loaded");
 }
 
 document.addEventListener("DOMContentLoaded", () => {

@@ -177,7 +177,6 @@
       <div id="formStep" style="display:none;">
         <div class="settings-main-tabs">
           <button type="button" class="modal-tab-btn active" onclick="switchTab('configJam')" id="tabBtn-configJam">🕒 Config Jam</button>
-          <button type="button" class="modal-tab-btn" onclick="switchTab('tampilan')" id="tabBtn-tampilan">🎨 Tampilan</button>
           <button type="button" class="modal-tab-btn" onclick="switchTab('proteksi')" id="tabBtn-proteksi">🛡️ Proteksi</button>
           <button type="button" class="modal-tab-btn" onclick="switchTab('export')" id="tabBtn-export">📥 Export Data</button>
         </div>
@@ -294,22 +293,6 @@
             </div>
           </div>
 
-          <!-- TAB CONTENT: TAMPILAN -->
-          <div id="tabContent-tampilan" class="tab-content" style="display:none;">
-            <div class="config-info">💡 Pilih tema warna branding utama aplikasi untuk monitor presensi sekolah.</div>
-            <div class="form-group">
-              <label for="cfgTemaWarna">Preset Warna Branding:</label>
-              <select id="cfgTemaWarna" class="form-input" onchange="previewSelectedTheme(this.value)">
-                <option value="DEFAULT_BURGUNDY">🍷 Burgundy Classic (Default)</option>
-                <option value="EMERALD_GREEN">🌿 Emerald Green</option>
-                <option value="ROYAL_BLUE">💙 Royal Blue</option>
-                <option value="DARK_STEALTH">🖤 Dark Stealth / Charcoal</option>
-                <option value="WARM_ORANGE">🍊 Warm Orange</option>
-                <option value="ELEGANT_GOLD">👑 Elegant Gold</option>
-              </select>
-            </div>
-          </div>
-          
           <!-- TAB 3: EXPORT DATA -->
           <div id="tabContent-export" class="tab-content" style="display:none;">
             <div class="export-panel">
