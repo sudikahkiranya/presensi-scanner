@@ -11,6 +11,7 @@
 
 <body>
 
+  <!-- TOP HEADER BANNER -->
   <div id="topHeaderBanner">
     <div class="brand-title" id="headerNamaSekolah">Memuat...</div>
     <div class="left-controls">
@@ -22,55 +23,45 @@
     </div>
   </div>
 
-<!-- INITIAL FULL-SCREEN BOOT SPLASH -->
-<div id="initialSplashLoader">
-  <main class="container-login">
-    
-    <!-- PANEL KIRI: VISUAL ARTWORK -->
-    <section class="login-visual" aria-label="Informasi aplikasi">
-      <div class="visual-copy">
-        <!-- <div class="visual-eyebrow">
-          <span aria-hidden="true">✦</span> SISENSI
-        </div>
-        <p>Jikalau bisa tidak sulit kenapa harus tidak mudah.</p> -->
-      </div>
-    </section>
+  <!-- INITIAL FULL-SCREEN BOOT SPLASH -->
+  <div id="initialSplashLoader">
+    <main class="container-login">
+      <!-- PANEL KIRI: VISUAL ARTWORK -->
+      <section class="login-visual" aria-label="Informasi aplikasi">
+        <div class="visual-copy"></div>
+      </section>
 
-    <!-- PANEL KANAN: STEP CHECKLIST & PROGRESS BAR -->
-    <section class="login-content">
-      
-      <!-- HEADER TITLE BARU DENGAN IKON SCAN SVG -->
-      <div class="splash-heading-title">
-        <div class="splash-title-row">
-          <h2>Presensi Siswa</h2>
+      <!-- PANEL KANAN: STEP CHECKLIST & PROGRESS BAR -->
+      <section class="login-content">
+        <div class="splash-heading-title">
+          <div class="splash-title-row">
+            <h2>Presensi Siswa</h2>
+          </div>
         </div>
-      </div>
 
-      <!-- CHECKLIST STEP (3 ITEM RINGKAS) -->
-      <div class="splash-steps-wrapper">
-        <div class="splash-step-item" id="stepSekolah">
-          <span class="step-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" stroke-width="2.5"></circle></svg></span>
-          <span class="step-label">Memuat profil sekolah...</span>
+        <div class="splash-steps-wrapper">
+          <div class="splash-step-item" id="stepSekolah">
+            <span class="step-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" stroke-width="2.5"></circle></svg></span>
+            <span class="step-label">Memuat profil sekolah...</span>
+          </div>
+          <div class="splash-step-item" id="stepSiswa">
+            <span class="step-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" stroke-width="2.5"></circle></svg></span>
+            <span class="step-label">Memuat database siswa aktif...</span>
+          </div>
+          <div class="splash-step-item" id="stepConfig">
+            <span class="step-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" stroke-width="2.5"></circle></svg></span>
+            <span class="step-label">Memuat konfigurasi presensi hari ini...</span>
+          </div>
         </div>
-        <div class="splash-step-item" id="stepSiswa">
-          <span class="step-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" stroke-width="2.5"></circle></svg></span>
-          <span class="step-label">Memuat database siswa aktif...</span>
+
+        <div class="splash-progress-container">
+          <div class="splash-progress-bar"></div>
         </div>
-        <div class="splash-step-item" id="stepConfig">
-          <span class="step-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" stroke-width="2.5"></circle></svg></span>
-          <span class="step-label">Memuat konfigurasi presensi hari ini...</span>
-        </div>
-      </div>
+      </section>
+    </main>
+  </div>
 
-      <!-- KAPSUL PROGRESS BAR COMPACT -->
-      <div class="splash-progress-container">
-        <div class="splash-progress-bar"></div>
-      </div>
-
-    </section>
-  </main>
-</div>
-
+  <!-- MAIN SCANNER DASHBOARD -->
   <div id="scanArea" class="dashboard-container" style="display:none">
     <div class="card scanner-card-fixed" id="scannerCard">
       <div id="syncOverlay" class="sync-overlay" style="display:none">
@@ -84,19 +75,7 @@
         <h1 class="scanner-title">Scan QR Presensi</h1>
 
         <div class="scanner-input-wrapper">
-          <svg
-            class="scan-input-icon"
-            xmlns="http://www.w3.org/2000/svg"
-            width="22"
-            height="22"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
+          <svg class="scan-input-icon" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M4 8V5a1 1 0 0 1 1-1h3" />
             <path d="M16 4h3a1 1 0 0 1 1 1v3" />
             <path d="M20 16v3a1 1 0 0 1-1 1h-3" />
@@ -104,14 +83,7 @@
             <path d="M7 12h10" />
           </svg>
 
-          <input
-            id="nis"
-            placeholder="......."
-            autocomplete="off"
-            autocorrect="off"
-            autocapitalize="off"
-            spellcheck="false"
-          />
+          <input id="nis" placeholder="......." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
         </div>
 
         <div class="scanner-config-indicators" aria-label="Status konfigurasi">
@@ -125,11 +97,11 @@
       </div>
 
       <!-- AREA RESULT / IDLE MODE -->
-      <div id="resultSlot" style="width: 100%; flex: 1; display: flex; align-items: center; justify-content: center;">
+      <div id="resultSlot" class="result-slot-container">
         <!-- IDLE MODE -->
         <div id="idleBox" class="idle-container">
-          <img class="logo-idle-mode" src="assets/logo_medcom.png" alt="Logo MedikaCom">
-          <div class="idle-date-text" id="idleDateText">Senin, 28 September 2026</div>
+          <img class="logo-idle-mode" src="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏫</text></svg>" alt="Logo Sekolah">
+          <div class="idle-date-text" id="idleDateText">Memuat tanggal...</div>
           <div class="idle-clock-digital" id="idleClockText">00:00:00</div>
         </div>
 
@@ -149,26 +121,18 @@
       </div>
     </div>
 
-    <!-- 📊 KARTU REKAP PER KELAS -->
+    <!-- KARTU REKAP PER KELAS -->
     <div class="card jurusan-card-fixed rekap-card-layout">
       <div id="kelasListContainer">
-
-        <!-- Empty state -->
         <div id="emptyRekapState" class="empty-rekap-state">
-          <img
-            src="assets/top3kelas.png"
-            alt="Ilustrasi rekap kehadiran"
-            class="empty-rekap-image"
-          />
-
+          <img src="assets/top3kelas.png" alt="Ilustrasi rekap kehadiran" class="empty-rekap-image" />
           <h3>Rekap Kehadiran Kelas</h3>
           <p>Belum ada presensi hari ini.</p>
         </div>
-
       </div>
     </div>
 
-    <!-- 🏆 HALL OF FAME WITH MULTI-TINGKAT CAROUSEL SUPPORT -->
+    <!-- HALL OF FAME CAROUSEL -->
     <div class="card hall-of-fame-card" id="hallOfFameCard">
       <div class="hof-top-header">
         <div class="hof-inline-title">
@@ -193,7 +157,6 @@
         </div>
       </div>
 
-      <!-- HEADER MODAL UTAMA -->
       <div class="settings-title">
         <span>Pengaturan Presensi Hari Ini</span>
       </div>
@@ -201,33 +164,24 @@
       <!-- STEP 1: VERIFIKASI PIN PETUGAS -->
       <div id="pinStep">
         <div class="form-group">
-          <label>Masukkan PIN:</label>
+          <label for="pinInput">Masukkan PIN:</label>
           <input type="password" id="pinInput" placeholder="****" maxlength="8">
         </div>
         <div class="btn-row">
-          <button class="btn-cancel" onclick="closeSettingsModal()">Tutup</button>
-          <button class="btn-save" onclick="verifyPin()">Lanjut</button>
+          <button type="button" class="btn-cancel" onclick="closeSettingsModal()">Tutup</button>
+          <button type="button" class="btn-save" onclick="verifyPin()">Lanjut</button>
         </div>
       </div>
 
       <!-- STEP 2: FORM PENGATURAN -->
       <div id="formStep" style="display:none;">
-
-        <!-- TAB UTAMA -->
         <div class="settings-main-tabs">
-          <button type="button" class="modal-tab-btn active" onclick="switchTab('configJam')" id="tabBtn-configJam">
-            🕒 Config Jam
-          </button>
-          <button type="button" class="modal-tab-btn" onclick="switchTab('proteksi')" id="tabBtn-proteksi">
-            🛡️ Proteksi
-          </button>
-          <button type="button" class="modal-tab-btn" onclick="switchTab('export')" id="tabBtn-export">
-            📥 Export Data
-          </button>
+          <button type="button" class="modal-tab-btn active" onclick="switchTab('configJam')" id="tabBtn-configJam">🕒 Config Jam</button>
+          <button type="button" class="modal-tab-btn" onclick="switchTab('proteksi')" id="tabBtn-proteksi">🛡️ Proteksi</button>
+          <button type="button" class="modal-tab-btn" onclick="switchTab('export')" id="tabBtn-export">📥 Export Data</button>
         </div>
 
         <div class="settings-scroll-area">
-
           <!-- TAB 1: CONFIG JAM -->
           <div id="tabContent-configJam" class="tab-content">
             <div class="config-jam-toggle-row">
@@ -241,7 +195,6 @@
               </div>
             </div>
 
-            <!-- SUBTAB JADWAL -->
             <div class="settings-time-subtabs">
               <button type="button" class="modal-subtab-btn active" onclick="switchTimeTab('global')" id="timeTabBtn-global">Global</button>
               <button type="button" class="modal-subtab-btn" onclick="switchTimeTab('X')" id="timeTabBtn-X">Tingkat X</button>
@@ -253,11 +206,11 @@
             <div id="timeTabContent-global" class="time-tab-content">
               <div class="config-info">💡 Pengaturan Global menjadi jadwal fallback apabila jadwal khusus tingkat belum diatur.</div>
               <div class="settings-fields-grid">
-                <div class="form-group"><label>Jam Masuk Fallback:</label><input type="time" id="cfgJamMasukGlobal"></div>
-                <div class="form-group"><label>Jam Pulang Fallback:</label><input type="time" id="cfgJamPulangGlobal"></div>
-                <div class="form-group"><label>Batas Terlambat (Menit):</label><input type="number" id="cfgTerlambatGlobal"></div>
-                <div class="form-group"><label>Batas Sangat Terlambat (Menit):</label><input type="number" id="cfgSangatTerlambatGlobal"></div>
-                <div class="form-group"><label>Batas Sangat Terlambat Sekali (Menit):</label><input type="number" id="cfgSangatTerlambatSekaliGlobal"></div>
+                <div class="form-group"><label for="cfgJamMasukGlobal">Jam Masuk Fallback:</label><input type="time" id="cfgJamMasukGlobal"></div>
+                <div class="form-group"><label for="cfgJamPulangGlobal">Jam Pulang Fallback:</label><input type="time" id="cfgJamPulangGlobal"></div>
+                <div class="form-group"><label for="cfgTerlambatGlobal">Batas Terlambat (Menit):</label><input type="number" id="cfgTerlambatGlobal"></div>
+                <div class="form-group"><label for="cfgSangatTerlambatGlobal">Batas Sangat Terlambat (Menit):</label><input type="number" id="cfgSangatTerlambatGlobal"></div>
+                <div class="form-group"><label for="cfgSangatTerlambatSekaliGlobal">Batas Sangat Terlambat Sekali (Menit):</label><input type="number" id="cfgSangatTerlambatSekaliGlobal"></div>
               </div>
             </div>
 
@@ -265,8 +218,8 @@
             <div id="timeTabContent-X" class="time-tab-content" style="display:none;">
               <div class="config-info">💡 Jadwal khusus siswa <b>Tingkat X</b>. Jika kosong, mengikuti Global.</div>
               <div class="settings-fields-grid">
-                <div class="form-group"><label>Jam Masuk Tingkat X:</label><input type="time" id="cfgJamMasukX"></div>
-                <div class="form-group"><label>Jam Pulang Tingkat X:</label><input type="time" id="cfgJamPulangX"></div>
+                <div class="form-group"><label for="cfgJamMasukX">Jam Masuk Tingkat X:</label><input type="time" id="cfgJamMasukX"></div>
+                <div class="form-group"><label for="cfgJamPulangX">Jam Pulang Tingkat X:</label><input type="time" id="cfgJamPulangX"></div>
               </div>
             </div>
 
@@ -274,8 +227,8 @@
             <div id="timeTabContent-XI" class="time-tab-content" style="display:none;">
               <div class="config-info">💡 Jadwal khusus siswa <b>Tingkat XI</b>. Jika kosong, mengikuti Global.</div>
               <div class="settings-fields-grid">
-                <div class="form-group"><label>Jam Masuk Tingkat XI:</label><input type="time" id="cfgJamMasukXI"></div>
-                <div class="form-group"><label>Jam Pulang Tingkat XI:</label><input type="time" id="cfgJamPulangXI"></div>
+                <div class="form-group"><label for="cfgJamMasukXI">Jam Masuk Tingkat XI:</label><input type="time" id="cfgJamMasukXI"></div>
+                <div class="form-group"><label for="cfgJamPulangXI">Jam Pulang Tingkat XI:</label><input type="time" id="cfgJamPulangXI"></div>
               </div>
             </div>
 
@@ -283,8 +236,8 @@
             <div id="timeTabContent-XII" class="time-tab-content" style="display:none;">
               <div class="config-info">💡 Jadwal khusus siswa <b>Tingkat XII</b>. Jika kosong, mengikuti Global.</div>
               <div class="settings-fields-grid">
-                <div class="form-group"><label>Jam Masuk Tingkat XII:</label><input type="time" id="cfgJamMasukXII"></div>
-                <div class="form-group"><label>Jam Pulang Tingkat XII:</label><input type="time" id="cfgJamPulangXII"></div>
+                <div class="form-group"><label for="cfgJamMasukXII">Jam Masuk Tingkat XII:</label><input type="time" id="cfgJamMasukXII"></div>
+                <div class="form-group"><label for="cfgJamPulangXII">Jam Pulang Tingkat XII:</label><input type="time" id="cfgJamPulangXII"></div>
               </div>
             </div>
           </div>
@@ -353,26 +306,23 @@
               </button>
             </div>
           </div>
-
-        </div><!-- /.settings-scroll-area -->
+        </div>
 
         <hr class="settings-divider">
         <div class="btn-row settings-footer">
           <button type="button" class="btn-cancel" onclick="closeSettingsModal()">Tutup</button>
           <button type="button" class="btn-save" onclick="saveOverrideJam()">Simpan</button>
         </div>
-
       </div>
     </div>
   </div>
 
+  <!-- CUSTOM ALERT MODAL -->
   <div id="customAlertModal" class="settings-modal-backdrop">
-    <div class="settings-modal-box" style="text-align: center; max-width: 350px; padding: 30px 24px;">
-      <div id="alertIcon" style="font-size: 48px; margin-bottom: 12px; line-height: 1;">🚀</div>
-      <div id="alertMessage" style="font-size: 15px; font-weight: 700; color: #1e293b; line-height: 1.5; margin-bottom: 20px;">
-        Pesan alert di sini...
-      </div>
-      <button class="btn-save" style="width: 100%; padding: 10px;" onclick="closeCustomAlert()">Tutup</button>
+    <div class="settings-modal-box custom-alert-box">
+      <div id="alertIcon" class="custom-alert-icon">🚀</div>
+      <div id="alertMessage" class="custom-alert-message">Pesan alert di sini...</div>
+      <button type="button" class="btn-save custom-alert-btn" onclick="closeCustomAlert()">Tutup</button>
     </div>
   </div>
 

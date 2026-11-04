@@ -1904,3 +1904,38 @@ body.effects-disabled .idle-container {
   #initialSplashLoader .login-visual { min-height: 180px; padding: 20px; }
   #initialSplashLoader .login-content { padding: 28px clamp(20px, 6vw, 40px) 24px !important; }
 }
+
+/* Penata letak slot hasil scan (ganti inline style) */
+.result-slot-container {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Custom Alert Box Modal */
+.custom-alert-box {
+  text-align: center !important;
+  max-width: 350px !important;
+  padding: 30px 24px !important;
+}
+
+.custom-alert-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  line-height: 1;
+}
+
+.custom-alert-message {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.custom-alert-btn {
+  width: 100%;
+  padding: 10px;
+}

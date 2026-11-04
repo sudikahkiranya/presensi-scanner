@@ -283,7 +283,6 @@ let totalSiswaPerJurusan = {
 };
 
 const input = document.getElementById("nis");
-const LOGO_SEKOLAH = "assets/logo_medcom.png";
 
 function updateProgress(val) {
   document.getElementById("bar").style.width = val + "%";
