@@ -18,7 +18,27 @@
         <div id="statusBar" onclick="handleSyncButtonClick()"><span id="statusText">Checking...</span></div>
         <button type="button" id="settingsBtn" onclick="openSettingsModal()" title="Konfigurasi" aria-label="Konfigurasi">⚙️</button>
         <button type="button" id="effectsToggleBtn" class="effects-on" onclick="toggleRekapEffects()" title="Efek Animasi" aria-label="Animasi aktif" aria-pressed="true">🌟</button>
-        <button type="button" id="themeToggleBtn" onclick="cycleAppTheme()" title="Ganti Tema Warna" aria-label="Ganti Tema Warna">🎨</button>
+        
+        <!-- 🎨 Tombol Palette Warna Baru -->
+        <div class="theme-picker-wrapper">
+          <button type="button" id="themePickerBtn" onclick="toggleThemePopover(event)" title="Pilih Tema Warna" aria-label="Pilih Tema Warna">🎨</button>
+          
+          <!-- Modal Melayang / Popover Pilihan Warna -->
+          <div id="themePopover" class="theme-popover">
+            <div class="theme-popover-header">Pilih Tema Warna</div>
+            <div class="theme-color-grid">
+              <button type="button" class="color-swatch burgundyswatch active" data-theme="burgundy" onclick="selectTheme('burgundy')" title="Burgundy (Default)"></button>
+              <button type="button" class="color-swatch greenswatch" data-theme="green" onclick="selectTheme('green')" title="Emerald Green"></button>
+              <button type="button" class="color-swatch blueswatch" data-theme="blue" onclick="selectTheme('blue')" title="Royal Blue"></button>
+              <button type="button" class="color-swatch orangeswatch" data-theme="orange" onclick="selectTheme('orange')" title="Sunset Orange"></button>
+              <button type="button" class="color-swatch purpleswatch" data-theme="purple" onclick="selectTheme('purple')" title="Purple"></button>
+              <button type="button" class="color-swatch goldswatch" data-theme="gold" onclick="selectTheme('gold')" title="Amber Gold"></button>
+              <button type="button" class="color-swatch blackswatch" data-theme="black" onclick="selectTheme('black')" title="Stealth Black"></button>
+              <button type="button" class="color-swatch whiteswatch" data-theme="white" onclick="selectTheme('white')" title="Pearl White"></button>
+            </div>
+          </div>
+        </div>
+
         <div id="totalHadirBox"><span>Masuk:</span><span id="totalHadirText">0</span></div>
         <div id="totalPulangBox"><span>Pulang:</span><span id="totalPulangText">0</span></div>
       </div>
