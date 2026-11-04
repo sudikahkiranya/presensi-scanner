@@ -30,7 +30,7 @@ async function loadSystemConfig() {
     if (result && result.success && result.data) {
       systemConfig = result.data;
       applySystemConfigToUI();
-    } else if (result && (result.nama_sekolah || result.NAMA_SEKOLAH || result.data)) {
+    } else if (result && typeof result === "object") {
       systemConfig = result.data || result;
       applySystemConfigToUI();
     }
@@ -43,7 +43,7 @@ async function loadSystemConfig() {
 function applySystemConfigToUI() {
   const config = systemConfig || {};
 
-  // Deteksi pintar berbagai kemungkinan key dari spreadsheet
+  // Deteksi fleksibel key dari sheet
   const namaSekolah = config.nama_sekolah || config.NAMA_SEKOLAH || config.namaSekolah || config.SCHOOL_NAME || "";
   const logoUrl = config.logo_sekolah_direct_url || config.logo_sekolah_url || config.LOGO_SEKOLAH || "";
 
@@ -53,7 +53,7 @@ function applySystemConfigToUI() {
     headerTitleEl.innerText = namaSekolah ? `Presensi ${namaSekolah}` : "Presensi Siswa";
   }
 
-  // Injeksi Logo Sekolah secara dinamis
+  // Injeksi Logo Sekolah
   if (logoUrl) {
     const logoElements = document.querySelectorAll(".logo-sekolah-img, .logo-idle-mode");
     logoElements.forEach(img => {
@@ -61,10 +61,6 @@ function applySystemConfigToUI() {
       img.onload = () => img.classList.add("is-loaded");
       if (img.complete) img.classList.add("is-loaded");
     });
-
-    // Update Favicon Tab jika elemennya ada
-    const faviconEl = document.getElementById("appFavicon") || document.querySelector("link[rel*='icon']");
-    if (faviconEl) faviconEl.href = logoUrl;
   }
 
   // Update Title Tab Browser
@@ -394,8 +390,6 @@ function loadStudents() {
 
   }, 250); // Jeda kilat step 1 -> step 2
 }
-
-window.onload = loadStudents;
 
 function extractTingkatFromKelas(kelasStr) {
   if (!kelasStr) return "";
