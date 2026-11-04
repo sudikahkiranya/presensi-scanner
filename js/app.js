@@ -42,29 +42,43 @@ async function loadSystemConfig() {
 
 // 2. Fungsi Terapkan ke UI Dashboard Scanner
 function applySystemConfigToUI() {
-  const config = systemConfig || {};
+  const config = (systemConfig && systemConfig.data) ? systemConfig.data : (systemConfig || {});
 
-  // Deteksi fleksibel key dari sheet
-  const namaSekolah = config.nama_sekolah || config.NAMA_SEKOLAH || config.namaSekolah || config.SCHOOL_NAME || "";
-  const logoUrl = config.logo_sekolah_direct_url || config.logo_sekolah_url || config.LOGO_SEKOLAH || "";
+  const namaSekolah = 
+    config.nama_sekolah || 
+    config.NAMA_SEKOLAH || 
+    config.namaSekolah || 
+    config.SCHOOL_NAME || "";
 
-  // Injeksi Nama Sekolah di Header Banner
+  const logoUrl = 
+    config.logo_sekolah_direct_url || 
+    config.logo_sekolah_url || 
+    config.LOGO_SEKOLAH || "";
+
+  // 1. Injeksi Nama Sekolah Modular
   const headerTitleEl = document.getElementById("headerNamaSekolah");
   if (headerTitleEl) {
     headerTitleEl.innerText = namaSekolah ? `Presensi ${namaSekolah}` : "Presensi Siswa";
   }
 
-  // Injeksi Logo Sekolah
+  // 2. Injeksi Logo & Favicon Modular dari Config Sheet
   if (logoUrl) {
+    // Set Logo Elemen UI
     const logoElements = document.querySelectorAll(".logo-sekolah-img, .logo-idle-mode");
     logoElements.forEach(img => {
       img.src = logoUrl;
       img.onload = () => img.classList.add("is-loaded");
       if (img.complete) img.classList.add("is-loaded");
     });
+
+    // 🚀 Set Favicon Browser Dinamis dari URL Sheet
+    const faviconEl = document.getElementById("appFavicon") || document.querySelector("link[rel*='icon']");
+    if (faviconEl) {
+      faviconEl.href = logoUrl;
+    }
   }
 
-  // Update Title Tab Browser
+  // 3. Title Tab Browser Modular
   if (namaSekolah) {
     document.title = `Presensi | ${namaSekolah}`;
   }
