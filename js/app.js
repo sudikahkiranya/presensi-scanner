@@ -2287,47 +2287,56 @@ setInterval(updateConfigIndicators, 60000);
 })();
 
 function applyDominanGlow(imgElement) {
-  if (!imgElement) return;
+  if (!imgElement || !imgElement.src) return;
 
-  const getDominantColor = (img) => {
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    canvas.width = 50;
-    canvas.height = 50;
+  // 1. Buat elemen gambar sementara di memori JS
+  const tempImg = new Image();
+  tempImg.crossOrigin = "Anonymous"; // Izin membaca piksel lintas domain
+  tempImg.src = imgElement.src;
 
-    ctx.drawImage(img, 0, 0, 50, 50);
-    const data = ctx.getImageData(0, 0, 50, 50).data;
-
-    let r = 0, g = 0, b = 0, count = 0;
-
-    for (let i = 0; i < data.length; i += 4) {
-      const alpha = data[i + 3];
-      if (alpha > 128) {
-        r += data[i];
-        g += data[i + 1];
-        b += data[i + 2];
-        count++;
-      }
-    }
-
-    if (count === 0) return "37, 99, 235";
-    return `${Math.round(r / count)}, ${Math.round(g / count)}, ${Math.round(b / count)}`;
-  };
-
-  const processImg = () => {
+  // 2. TUNGGU SAMPAI GAMBAR BENAR-BENAR SIAP 100%
+  tempImg.onload = function() {
     try {
-      const rgbStr = getDominantColor(imgElement);
-      imgElement.style.setProperty("--glow-rgb", rgbStr);
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      canvas.width = 50;
+      canvas.height = 50;
+
+      // Gambar ke canvas setelah gambar siap
+      ctx.drawImage(tempImg, 0, 0, 50, 50);
+      const data = ctx.getImageData(0, 0, 50, 50).data;
+
+      let r = 0, g = 0, b = 0, count = 0;
+
+      for (let i = 0; i < data.length; i += 4) {
+        const alpha = data[i + 3];
+        const red = data[i];
+        const green = data[i + 1];
+        const blue = data[i + 2];
+
+        // Abaikan piksel transparan dan piksel yang terlalu putih polos (background)
+        if (alpha > 128 && !(red > 240 && green > 240 && blue > 240)) {
+          r += red;
+          g += green;
+          b += blue;
+          count++;
+        }
+      }
+
+      if (count > 0) {
+        const rgbStr = `${Math.round(r / count)}, ${Math.round(g / count)}, ${Math.round(b / count)}`;
+        imgElement.style.setProperty("--glow-rgb", rgbStr);
+      }
     } catch (e) {
-      imgElement.style.setProperty("--glow-rgb", "130, 70, 83");
+      // Fallback warna biru netral (bukan burgundy) jika terhalang CORS
+      imgElement.style.setProperty("--glow-rgb", "37, 99, 235");
     }
   };
 
-  if (imgElement.complete && imgElement.naturalWidth !== 0) {
-    processImg();
-  } else {
-    imgElement.onload = processImg;
-  }
+  // Fallback jika gambar gagal dimuat
+  tempImg.onerror = function() {
+    imgElement.style.setProperty("--glow-rgb", "37, 99, 235");
+  };
 }
 
 document.addEventListener("DOMContentLoaded", () => {
