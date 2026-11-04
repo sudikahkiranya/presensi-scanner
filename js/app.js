@@ -61,14 +61,30 @@ function applySystemConfigToUI() {
     headerTitleEl.innerText = namaSekolah ? `Presensi ${namaSekolah}` : "Presensi Siswa";
   }
 
-  // 2. Injeksi Logo & Favicon Modular dari Config Sheet
+  // 2. Injeksi Logo, Alt Text, & Glow Modular dari Config Sheet
   if (logoUrl) {
-    // Set Logo Elemen UI
     const logoElements = document.querySelectorAll(".logo-sekolah-img, .logo-idle-mode");
     logoElements.forEach(img => {
       img.src = logoUrl;
-      img.onload = () => img.classList.add("is-loaded");
-      if (img.complete) img.classList.add("is-loaded");
+      if (namaSekolah) {
+        img.alt = `Logo ${namaSekolah}`;
+      }
+
+      // Handler saat gambar selesai dimuat (hitung ulang glow breath)
+      img.onload = () => {
+        img.classList.add("is-loaded");
+        if (typeof applyDominanGlow === "function") {
+          applyDominanGlow(img);
+        }
+      };
+
+      // Handler jika gambar sudah langsung ter-cached oleh browser
+      if (img.complete) {
+        img.classList.add("is-loaded");
+        if (typeof applyDominanGlow === "function") {
+          applyDominanGlow(img);
+        }
+      }
     });
 
     // 🚀 Set Favicon Browser Dinamis dari URL Sheet
