@@ -19,6 +19,62 @@ async function runGasApi(action, payload = {}) {
   }
 }
 
+// Variabel global untuk menampung config sistem
+let systemConfig = {};
+
+// 1. Fungsi Tarik Config Mandiri (Meniru Portal Piket)
+async function loadSystemConfig() {
+  try {
+    const response = await fetch(`${GAS_API_URL}?action=getSystemConfig`, {
+      method: "GET",
+      redirect: "follow"
+    });
+    const result = await response.json();
+
+    if (result.success && result.data) {
+      systemConfig = result.data;
+      applySystemConfigToUI();
+    }
+  } catch (err) {
+    console.warn("Gagal memuat system config:", err);
+  }
+}
+
+// 2. Fungsi Terapkan ke UI Dashboard Scanner
+function applySystemConfigToUI() {
+  const config = systemConfig;
+  if (!config) return;
+
+  const logoUrl = config.logo_sekolah_direct_url || config.logo_sekolah_url;
+
+  // Injeksi Logo Sekolah secara dinamis
+  const logoElements = document.querySelectorAll(".logo-sekolah-img, .logo-idle-mode");
+  logoElements.forEach(img => {
+    if (logoUrl) {
+      img.src = logoUrl;
+      img.onload = () => img.classList.add("is-loaded");
+      if (img.complete) img.classList.add("is-loaded");
+    }
+  });
+
+  // Injeksi Nama Sekolah di Header Banner
+  const headerTitleEl = document.getElementById("headerNamaSekolah");
+  if (headerTitleEl && config.nama_sekolah) {
+    headerTitleEl.innerText = `Presensi ${config.nama_sekolah}`;
+  }
+
+  // Update Title Tab Browser
+  if (config.nama_sekolah) {
+    document.title = `Presensi - ${config.nama_sekolah}`;
+  }
+}
+
+// 3. Panggil saat awal aplikasi dimuat
+window.onload = function() {
+  loadSystemConfig(); // Ambil config sistem (nama & logo) secara asinkron
+  loadStudents();     // Ambil database siswa & presensi
+};
+
 function loadRekapEffectsPreference() {
   try {
     const saved = localStorage.getItem(REKAP_EFFECTS_STORAGE_KEY);
@@ -251,22 +307,6 @@ function loadStudents() {
         }
 
         students = data.students || {};
-
-        // 🚀 INJEKSI MODULAR: Set Nama Sekolah secara dinamis dari config backend
-        if (data.namaSekolah) {
-          const headerTitleEl = document.querySelector("#topHeaderBanner h1, .header-title-sekolah");
-          if (headerTitleEl) {
-            headerTitleEl.innerText = `Presensi ${data.namaSekolah}`;
-          }
-        }
-
-        // 🚀 INJEKSI MODULAR: Set Logo Sekolah secara dinamis dari config backend
-        if (data.logoSekolah) {
-          const logoElements = document.querySelectorAll(".logo-sekolah-img, .logo-idle-mode");
-          logoElements.forEach(img => {
-            img.src = data.logoSekolah;
-          });
-        }
 
         if (data.configHariIni) {
           activeConfig = data.configHariIni;
