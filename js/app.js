@@ -1,8 +1,11 @@
 let students = {};
 
 const REKAP_EFFECTS_STORAGE_KEY = "sisensi_rekap_effects_enabled";
+const THEME_STORAGE_KEY = "sisensi_active_theme";
+
 let rekapEffectsEnabled = true;
 let previousRekapSnapshot = new Map();
+let systemConfig = {};
 
 // Helper tunggal penanganan API call dari Vercel ke Google Apps Script (GAS)
 async function runGasApi(action, payload = {}) {
@@ -19,10 +22,9 @@ async function runGasApi(action, payload = {}) {
   }
 }
 
-// Variabel global untuk menampung config sistem
-let systemConfig = {};
-
-// 1. Fungsi Tarik Config Mandiri
+/* ==========================================================================
+   1. SYSTEM CONFIG & THEME ENGINE
+   ========================================================================== */
 async function loadSystemConfig() {
   try {
     const result = await runGasApi("getSystemConfig");
@@ -30,17 +32,16 @@ async function loadSystemConfig() {
 
     if (result && result.success && result.data) {
       systemConfig = result.data;
-      applySystemConfigToUI();
     } else if (result && typeof result === "object") {
       systemConfig = result.data || result;
-      applySystemConfigToUI();
     }
+    applySystemConfigToUI();
+    initThemeEngine();
   } catch (err) {
     console.warn("⚠️ Gagal memuat system config:", err);
   }
 }
 
-// 2. Fungsi Terapkan ke UI Dashboard Scanner
 function applySystemConfigToUI() {
   const config = (systemConfig && systemConfig.data) ? systemConfig.data : (systemConfig || {});
 
@@ -61,7 +62,7 @@ function applySystemConfigToUI() {
     headerTitleEl.innerText = namaSekolah ? `Presensi ${namaSekolah}` : "Presensi Siswa";
   }
 
-  // 2. Injeksi Logo, Alt Text, & Glow Modular dari Config Sheet
+  // 2. Injeksi Logo & Alt Text Modular
   if (logoUrl) {
     const logoElements = document.querySelectorAll(".logo-sekolah-img, .logo-idle-mode");
     logoElements.forEach(img => {
@@ -69,25 +70,11 @@ function applySystemConfigToUI() {
       if (namaSekolah) {
         img.alt = `Logo ${namaSekolah}`;
       }
-
-      // Handler saat gambar selesai dimuat (hitung ulang glow breath)
-      img.onload = () => {
-        img.classList.add("is-loaded");
-        if (typeof applyDominanGlow === "function") {
-          applyDominanGlow(img);
-        }
-      };
-
-      // Handler jika gambar sudah langsung ter-cached oleh browser
-      if (img.complete) {
-        img.classList.add("is-loaded");
-        if (typeof applyDominanGlow === "function") {
-          applyDominanGlow(img);
-        }
-      }
+      img.onload = () => img.classList.add("is-loaded");
+      if (img.complete) img.classList.add("is-loaded");
     });
 
-    // 🚀 Set Favicon Browser Dinamis dari URL Sheet
+    // Set Favicon Browser Dinamis
     const faviconEl = document.getElementById("appFavicon") || document.querySelector("link[rel*='icon']");
     if (faviconEl) {
       faviconEl.href = logoUrl;
@@ -100,12 +87,65 @@ function applySystemConfigToUI() {
   }
 }
 
-// 3. Panggil saat awal aplikasi dimuat secara aman
-document.addEventListener("DOMContentLoaded", function() {
-  loadSystemConfig();
-  loadStudents();
+function initThemeEngine() {
+  const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+  const globalTheme = (systemConfig && systemConfig.data) 
+    ? (systemConfig.data.tema_warna || systemConfig.data.TEMA_WARNA)
+    : (systemConfig.tema_warna || "burgundy");
+
+  const themeToApply = savedTheme || String(globalTheme).toLowerCase() || "burgundy";
+  selectTheme(themeToApply, false);
+}
+
+function toggleThemePopover(event) {
+  if (event) event.stopPropagation();
+  const popover = document.getElementById("themePopover");
+  if (popover) {
+    popover.classList.toggle("is-open");
+  }
+}
+
+function selectTheme(themeName, isUserAction = true) {
+  const cleanTheme = String(themeName).toLowerCase();
+  
+  // Pasang Atribut data-theme ke Tag <body>
+  document.body.setAttribute("data-theme", cleanTheme);
+
+  // Update State Aktif pada Swatch Bulatan Popover
+  document.querySelectorAll(".color-swatch").forEach(swatch => {
+    swatch.classList.toggle("active", swatch.dataset.theme === cleanTheme);
+  });
+
+  if (isUserAction) {
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, cleanTheme);
+    } catch (e) {}
+
+    const popover = document.getElementById("themePopover");
+    if (popover) popover.classList.remove("is-open");
+
+    if (window.settingsAdminToken) {
+      runGasApi("saveSystemTheme", { theme: cleanTheme, token: window.settingsAdminToken })
+        .catch(e => console.warn("Sync tema ke server gagal:", e));
+    }
+
+    showToast(`Tema visual diubah ke ${cleanTheme.toUpperCase()}!`, "info");
+  }
+}
+
+document.addEventListener("click", function(e) {
+  const popover = document.getElementById("themePopover");
+  const btn = document.getElementById("themePickerBtn");
+  if (popover && popover.classList.contains("is-open")) {
+    if (!popover.contains(e.target) && !btn.contains(e.target)) {
+      popover.classList.remove("is-open");
+    }
+  }
 });
 
+/* ==========================================================================
+   2. REKAP EFFECTS & SNAPSHOT
+   ========================================================================== */
 function loadRekapEffectsPreference() {
   try {
     const saved = localStorage.getItem(REKAP_EFFECTS_STORAGE_KEY);
@@ -126,9 +166,7 @@ function applyRekapEffectsPreference() {
   button.classList.toggle("effects-on", rekapEffectsEnabled);
   button.classList.toggle("effects-off", !rekapEffectsEnabled);
   button.setAttribute("aria-pressed", String(rekapEffectsEnabled));
-  button.title = rekapEffectsEnabled
-    ? "Animasi presensi aktif"
-    : "Animasi presensi nonaktif";
+  button.title = rekapEffectsEnabled ? "Animasi presensi aktif" : "Animasi presensi nonaktif";
 }
 
 function toggleRekapEffects() {
@@ -139,11 +177,7 @@ function toggleRekapEffects() {
   applyRekapEffectsPreference();
   if (!rekapEffectsEnabled) captureRekapSnapshot();
 
-  if (rekapEffectsEnabled) {
-    showToast("Efek animasi presensi aktif!", "success");
-  } else {
-    showToast("Efek animasi presensi nonaktif.", "info");
-  }
+  showToast(rekapEffectsEnabled ? "Efek animasi presensi aktif!" : "Efek animasi presensi nonaktif.", rekapEffectsEnabled ? "success" : "info");
 }
 
 function captureRekapSnapshot() {
@@ -239,10 +273,10 @@ function animateRekapChanges(previousSnapshot) {
   previousRekapSnapshot = currentSnapshot;
 }
 
-let progress = 0;
+/* ==========================================================================
+   3. INITIAL APP DATA LOADING & SPLASH SCREEN
+   ========================================================================== */
 let clearTimer;
-let syncTimer = null;
-
 let totalHadir = 0;
 let totalPulang = 0;
 let sudahHadirHariIni = new Set();
@@ -277,27 +311,11 @@ let countsJurusan = {
   RPL: 0, TKR: 0, TKJ: 0, TPM: 0, TSM: 0
 };
 
-let totalSiswaPerJurusan = {
-  AKUNTANSI: 0, DKV: 0, FARMASI: 0, KULINER: 0,
-  RPL: 0, TKR: 0, TKJ: 0, TPM: 0, TSM: 0
-};
-
 const input = document.getElementById("nis");
 
-function updateProgress(val) {
-  document.getElementById("bar").style.width = val + "%";
-  document.getElementById("progressText").innerText = val + "%";
-}
-
-// SVG Icon Definitions
 const SVG_ICONS = {
-  // Bulatan Pending (Ring Kecil Rapi)
   pending: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" stroke-width="2.5"></circle></svg>`,
-  
-  // Jam Pasir (Hourglass)
   loading: `<svg viewBox="0 0 24 24"><path d="M5 22h14M5 2h14M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"></path></svg>`,
-  
-  // Ceklis (Checkmark)
   done: `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`
 };
 
@@ -320,13 +338,10 @@ function setSplashStep(stepId, state) {
 }
 
 function loadStudents() {
-  // 1. Step 1: Profil Sekolah Jalan Kilat
   setSplashStep("stepSekolah", "is-loading");
 
   setTimeout(() => {
     setSplashStep("stepSekolah", "is-done");
-    
-    // 2. Step 2: DATABASE SISWA AKTIF -> JAM PASIR NANGKUT DI SINI PANGGIL API
     setSplashStep("stepSiswa", "is-loading");
 
     runGasApi("getScannerDashboardData")
@@ -362,8 +377,6 @@ function loadStudents() {
           sudahPulangHariIni = new Set(data.listPulangAwal.map(item => typeof item === "object" ? String(item.nis) : String(item)));
         }
 
-        if (data.totalSiswaPerJurusan) totalSiswaPerJurusan = data.totalSiswaPerJurusan;
-
         if (data.perJurusanAwal) {
           Object.keys(countsJurusan).forEach(key => { countsJurusan[key] = Number(data.perJurusanAwal[key]) || 0; });
           renderJurusanUI();
@@ -372,7 +385,6 @@ function loadStudents() {
         if (typeof renderHallOfFameUI === "function") renderHallOfFameUI();
         updateActiveLevelsBadge();
 
-        // Pre-fetch foto siswa ke cache browser
         Object.keys(students).forEach(nis => {
           if (students[nis].photo) {
             const imgCache = new Image();
@@ -381,16 +393,12 @@ function loadStudents() {
           }
         });
 
-        // 2. Step 2 (Database Siswa) Selesai
         setSplashStep("stepSiswa", "is-done");
-        
-        // 3. Step 3: Konfigurasi Presensi Hari Ini
         setSplashStep("stepConfig", "is-loading");
 
         setTimeout(() => {
           setSplashStep("stepConfig", "is-done");
 
-          // SMOOTH TRANSISI FADE OUT KE DASHBOARD
           setTimeout(() => {
             const splash = document.getElementById("initialSplashLoader");
             const scanArea = document.getElementById("scanArea");
@@ -410,7 +418,7 @@ function loadStudents() {
             setTimeout(autoSyncIfOnline, 1500);
           }, 300);
 
-        }, 350); // Jeda singkat step 3 -> done
+        }, 350);
 
       })
       .catch(error => {
@@ -418,7 +426,7 @@ function loadStudents() {
         showCustomAlert("❌", "Gagal mengambil data dari server. Periksa koneksi backend.");
       });
 
-  }, 250); // Jeda kilat step 1 -> step 2
+  }, 250);
 }
 
 function extractTingkatFromKelas(kelasStr) {
@@ -431,14 +439,10 @@ function extractTingkatFromKelas(kelasStr) {
 }
 
 /* ==========================================================================
-   SINGLE-FUNCTION INPUT PROTECTION SYSTEM
+   4. INPUT PROTECTION SYSTEM & SCANNER EVENT
    ========================================================================== */
 window.scannerProtectionConfig = window.scannerProtectionConfig || {
-  manualInput: true,
-  autoDelete: true,
-  paste: true,
-  dragDrop: true,
-  clipboardShortcut: true
+  manualInput: true, autoDelete: true, paste: true, dragDrop: true, clipboardShortcut: true
 };
 
 (function initInputProtectionSystem() {
@@ -467,35 +471,21 @@ window.scannerProtectionConfig = window.scannerProtectionConfig || {
 
     switch (eventType) {
       case "paste":
-        if (cfg.paste) {
-          e.preventDefault();
-          resetInput();
-        }
+        if (cfg.paste) { e.preventDefault(); resetInput(); }
         break;
-
       case "drop":
-        if (cfg.dragDrop) {
-          e.preventDefault();
-          resetInput();
-        }
+        if (cfg.dragDrop) { e.preventDefault(); resetInput(); }
         break;
-
       case "contextmenu":
-        if (cfg.paste || cfg.clipboardShortcut) {
-          e.preventDefault();
-        }
+        if (cfg.paste || cfg.clipboardShortcut) { e.preventDefault(); }
         break;
-
       case "keydown": {
         const key = String(e.key || "").toLowerCase();
         const isPaste = cfg.paste && ((e.ctrlKey || e.metaKey) && key === "v" || (e.shiftKey && key === "insert"));
         const isCopyCut = cfg.clipboardShortcut && (e.ctrlKey || e.metaKey) && (key === "c" || key === "x");
 
         if (isPaste || isCopyCut) {
-          e.preventDefault();
-          e.stopPropagation();
-          resetInput();
-          return;
+          e.preventDefault(); e.stopPropagation(); resetInput(); return;
         }
 
         const isCharKey = e.key && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey;
@@ -519,19 +509,13 @@ window.scannerProtectionConfig = window.scannerProtectionConfig || {
         lastKeyAt = now;
         break;
       }
-
       case "input":
-        if ((e.inputType === "insertFromPaste" && cfg.paste) || 
-            (e.inputType === "insertFromDrop" && cfg.dragDrop)) {
-          resetInput();
-          return;
+        if ((e.inputType === "insertFromPaste" && cfg.paste) || (e.inputType === "insertFromDrop" && cfg.dragDrop)) {
+          resetInput(); return;
         }
-
         clearIdleTimer();
         if (input.value && cfg.autoDelete) {
-          idleClearTimer = setTimeout(() => {
-            if (input.value.trim()) resetInput();
-          }, IDLE_CLEAR_MS);
+          idleClearTimer = setTimeout(() => { if (input.value.trim()) resetInput(); }, IDLE_CLEAR_MS);
         }
         break;
     }
@@ -544,57 +528,52 @@ window.scannerProtectionConfig = window.scannerProtectionConfig || {
   input.addEventListener("keydown", (e) => inputProtection(e, "keydown"), true);
 })();
 
-input.addEventListener("keydown", function(e) {
-  if (e.key === "Enter") {
-    e.preventDefault(); 
-    if (isSyncing) return;
+if (input) {
+  input.addEventListener("keydown", function(e) {
+    if (e.key === "Enter") {
+      e.preventDefault(); 
+      if (isSyncing) return;
 
-    const nis = input.value.trim();
-    if (!nis) return;
+      const nis = input.value.trim();
+      if (!nis) return;
 
-    if (!students || !students[nis]) {
-      console.warn(`⚠️ QR/NIS [${nis}] tidak ditemukan!`);
-      showError("QR tidak valid atau siswa tidak aktif");
-      input.value = "";
-      return;
+      if (!students || !students[nis]) {
+        console.warn(`⚠️ QR/NIS [${nis}] tidak ditemukan!`);
+        showError("QR tidak valid atau siswa tidak aktif");
+        input.value = "";
+        return;
+      }
+
+      try {
+        const rawStudentData = students[nis] || {};
+        const name = rawStudentData.name || "Siswa";
+        const kelas = rawStudentData.class || rawStudentData.kelas || "";
+        const photo = rawStudentData.photo || ""; 
+        
+        let tingkat = rawStudentData.tingkat || extractTingkatFromKelas(kelas);
+        const now = new Date();
+        const time = now.toTimeString().split(' ')[0]; 
+        
+        const statusInfo = calculateScanStatus(now, tingkat, rawStudentData);
+
+        showSuccess(nis, name, kelas, tingkat, time, photo, statusInfo);
+        input.value = "";
+
+        const scanTimestamp = now.toISOString();
+        const statusScan = statusInfo.isPulang ? "PULANG" : "MASUK";
+        const statusPresensi = statusInfo.code;
+
+        saveOfflineScan(nis, scanTimestamp, statusScan, statusPresensi);
+        triggerBackgroundSync();
+
+      } catch (err) {
+        console.error("❌ [CRITICAL SCAN ERROR]", err);
+        showError("Terjadi kesalahan sistem JS: " + (err.message || err));
+        input.value = "";
+      }
     }
-
-    try {
-      const rawStudentData = students[nis] || {};
-      const name = rawStudentData.name || "Siswa";
-      const kelas = rawStudentData.class || rawStudentData.kelas || "";
-      const photo = rawStudentData.photo || ""; 
-      
-      let tingkat = rawStudentData.tingkat || extractTingkatFromKelas(kelas);
-
-      const now = new Date();
-      const time = now.toTimeString().split(' ')[0]; 
-      
-      const statusInfo = calculateScanStatus(now, tingkat, rawStudentData);
-
-      showSuccess(nis, name, kelas, tingkat, time, photo, statusInfo);
-      input.value = "";
-
-      const scanTimestamp = now.toISOString();
-      const statusScan = statusInfo.isPulang ? "PULANG" : "MASUK";
-      const statusPresensi = statusInfo.code;
-
-      saveOfflineScan(
-        nis,
-        scanTimestamp,
-        statusScan,
-        statusPresensi
-      );
-
-      triggerBackgroundSync();
-
-    } catch (err) {
-      console.error("❌ [CRITICAL SCAN ERROR]", err);
-      showError("Terjadi kesalahan sistem JS: " + (err.message || err));
-      input.value = "";
-    }
-  }
-});
+  });
+}
 
 function calculateScanStatus(nowDate, tingkatSiswa, rawStudentObj) {
   const jam = String(nowDate.getHours()).padStart(2, '0');
@@ -679,8 +658,8 @@ function createInitialAvatarDataUrl(name) {
 
 function showSuccess(nis, name, kelas, tingkat, time, photo, statusInfo) {
   const isPulang = statusInfo.isPulang;
-
   let urutanScan = 1;
+
   if (isPulang) {
     if (!sudahPulangHariIni.has(nis)) {
       sudahPulangHariIni.add(nis);
@@ -723,7 +702,6 @@ function showSuccess(nis, name, kelas, tingkat, time, photo, statusInfo) {
 
   nameEl.innerText = name.toUpperCase();
   
-  // KODE BARU (SELALU FORMAT KELAS KECUALI KHUSUS SESI/LAB)
   const isLabOrSesi = /sesi|lab|ruang/i.test(kelas);
   classEl.innerText = isLabOrSesi ? kelas : formatNamaKelas(kelas, tingkat);
 
@@ -756,6 +734,9 @@ function clearResultLater() {
   }, 4000); 
 }
 
+/* ==========================================================================
+   5. OFFLINE SYNC ENGINE & BACKUP
+   ========================================================================== */
 function saveOfflineScan(nis, timeISO, statusScan, statusPresensi) {
   try {
     offlineScansCache.push({
@@ -766,23 +747,13 @@ function saveOfflineScan(nis, timeISO, statusScan, statusPresensi) {
       sent: false
     });
 
-    localStorage.setItem(
-      "offline_scans",
-      JSON.stringify(offlineScansCache)
-    );
-
+    localStorage.setItem("offline_scans", JSON.stringify(offlineScansCache));
     updateOfflineBadge();
   } catch (e) {
     console.error("⚠️ LocalStorage Penuh/Error:", e);
-    offlineScansCache = offlineScansCache.filter(
-      item => item.sent === false
-    );
-
+    offlineScansCache = offlineScansCache.filter(item => item.sent === false);
     try {
-      localStorage.setItem(
-        "offline_scans",
-        JSON.stringify(offlineScansCache)
-      );
+      localStorage.setItem("offline_scans", JSON.stringify(offlineScansCache));
     } catch (err) {}
   }
 }
@@ -899,7 +870,6 @@ function syncOfflineData() {
   if (isBackgroundSyncing || !navigator.onLine) return;
 
   updateOfflineScansCache();
-
   const pendingItems = offlineScansCache.filter(item => item.sent === false);
 
   if (pendingItems.length === 0) {
@@ -945,6 +915,9 @@ function syncOfflineData() {
     });
 }
 
+/* ==========================================================================
+   6. SETTINGS MODAL & PROTECTION MANAGEMENT
+   ========================================================================== */
 function showSettingsLoading(text) {
   const modalBox = document.querySelector("#settingsModal .settings-modal-box");
   const overlay = document.querySelector("#settingsModal .settings-loading-overlay");
@@ -989,10 +962,8 @@ function openSettingsModal() {
 function closeSettingsModal() {
   hideSettingsLoading(true);
   document.getElementById("settingsModal").classList.remove("active");
-  
   updateConfigIndicators();
-  
-  setTimeout(() => { input.focus(); }, 200);
+  setTimeout(() => { if (input) input.focus(); }, 200);
 }
 
 function verifyPin() {
@@ -1025,7 +996,7 @@ function verifyPin() {
 
       const byLevel = activeConfig.byLevel || {};
       document.getElementById("cfgJamMasukX").value = (byLevel["X"] && byLevel["X"].jamMasuk) ? byLevel["X"].jamMasuk : "";
-      document.getElementById("cfgJamPulangX").value = (byLevel["XII"] && byLevel["X"].jamPulang) ? byLevel["X"].jamPulang : "";
+      document.getElementById("cfgJamPulangX").value = (byLevel["X"] && byLevel["X"].jamPulang) ? byLevel["X"].jamPulang : "";
       document.getElementById("cfgJamMasukXI").value = (byLevel["XI"] && byLevel["XI"].jamMasuk) ? byLevel["XI"].jamMasuk : "";
       document.getElementById("cfgJamPulangXI").value = (byLevel["XI"] && byLevel["XI"].jamPulang) ? byLevel["XI"].jamPulang : "";
       document.getElementById("cfgJamMasukXII").value = (byLevel["XII"] && byLevel["XII"].jamMasuk) ? byLevel["XII"].jamMasuk : "";
@@ -1037,10 +1008,8 @@ function verifyPin() {
       const onCompleteVerify = function() {
         hideSettingsLoading(false);
         setModalMode("settings");
-        
         document.getElementById("pinStep").style.display = "none";
         document.getElementById("formStep").style.display = "flex";
-
         renderConfigJamToggle();
       };
 
@@ -1107,15 +1076,12 @@ function loadProtectionSettings(onComplete) {
       let serverConfig = (result && result.success && result.config) ? result.config : null;
       const today = getLocalDateString();
 
-      // CEK LOCALSTORAGE BEDA HARI / SAMA HARI
       if (!serverConfig || Object.keys(serverConfig).length === 0) {
         try {
           const cached = JSON.parse(localStorage.getItem("scanner_protection_config") || "null");
-          
           if (cached && cached.savedDate === today) {
             serverConfig = cached;
           } else {
-            // BERGANTI HARI -> OTO-RESET LOCALSTORAGE TO DEFAULT
             localStorage.removeItem("scanner_protection_config");
             serverConfig = null;
           }
@@ -1145,11 +1111,8 @@ function loadProtectionSettings(onComplete) {
 
       updateProtectionStatusUI();
 
-      if (typeof onComplete === "function") {
-        onComplete();
-      } else {
-        hideSettingsLoading(true);
-      }
+      if (typeof onComplete === "function") onComplete();
+      else hideSettingsLoading(true);
     })
     .catch(err => { 
       hideSettingsLoading(true); 
@@ -1170,7 +1133,7 @@ function saveProtectionSettings() {
     paste: !!document.getElementById("cfgProtectPaste")?.checked,
     dragDrop: !!document.getElementById("cfgProtectDragDrop")?.checked,
     clipboardShortcut: !!document.getElementById("cfgProtectClipboardShortcut")?.checked,
-    savedDate: getLocalDateString() // Stamp tanggal penyimpanan
+    savedDate: getLocalDateString()
   };
 
   showSettingsLoading("Menyimpan konfigurasi proteksi...");
@@ -1256,9 +1219,7 @@ function switchTab(tab) {
     if (button) button.classList.toggle('active', name === tab);
   });
 
-  if (tab === 'proteksi') {
-    syncProtectionUIWithActiveState();
-  }
+  if (tab === 'proteksi') syncProtectionUIWithActiveState();
 }
 
 function syncProtectionUIWithActiveState() {
@@ -1302,9 +1263,7 @@ function getTodayJamOverride() {
 
 function isConfigJamEnabledToday() {
   const saved = getTodayJamOverride();
-  if (saved && typeof saved.enabled === "boolean") {
-    return saved.enabled;
-  }
+  if (saved && typeof saved.enabled === "boolean") return saved.enabled;
   return !!(activeConfig && activeConfig.isKhusus);
 }
 
@@ -1314,14 +1273,8 @@ function renderConfigJamToggle() {
   if (!btnOn || !btnOff) return;
 
   const isEnabled = isConfigJamEnabledToday();
-
-  if (isEnabled) {
-    btnOn.classList.add("is-selected");
-    btnOff.classList.remove("is-selected");
-  } else {
-    btnOff.classList.add("is-selected");
-    btnOn.classList.remove("is-selected");
-  }
+  btnOn.classList.toggle("is-selected", isEnabled);
+  btnOff.classList.toggle("is-selected", !isEnabled);
 }
 
 function setConfigJamActive(enabled) {
@@ -1368,9 +1321,7 @@ function setConfigJamActive(enabled) {
   if (typeof updateActiveLevelsBadge === "function") updateActiveLevelsBadge();
   if (typeof renderJurusanUI === "function") renderJurusanUI();
 
-  showToast(nextEnabled 
-    ? "Config Jam aktif untuk hari ini." 
-    : "Config Jam nonaktif. Jadwal default digunakan.", "success");
+  showToast(nextEnabled ? "Config Jam aktif untuk hari ini." : "Config Jam nonaktif. Jadwal default digunakan.", "success");
 }
 
 function saveOverrideJam() {
@@ -1379,7 +1330,6 @@ function saveOverrideJam() {
     return;
   }
   const todayStr = getLocalDateString();
-  
   const isOffSelected = document.getElementById("configJamToggleOff")?.classList.contains("is-selected");
   const isEnabled = !isOffSelected;
 
@@ -1445,9 +1395,7 @@ function saveOverrideJam() {
   if (typeof renderJurusanUI === "function") renderJurusanUI();
   updateConfigIndicators();
 
-  showToast(isEnabled 
-    ? "Pengaturan jam berhasil disimpan dan otomatis AKTIF hari ini." 
-    : "Config Jam disimpan namun dalam kondisi NONAKTIF.", "success");
+  showToast(isEnabled ? "Pengaturan jam berhasil disimpan dan otomatis AKTIF hari ini." : "Config Jam disimpan namun dalam kondisi NONAKTIF.", "success");
 }
 
 function loadLocalOverrideJam() {
@@ -1476,12 +1424,9 @@ function loadLocalOverrideJam() {
 }
 
 function isLevelAllowed(tingkatSiswa, kelasSiswa) {
-  if (!activeConfig || !activeConfig.allowedLevels || activeConfig.allowedLevels.length === 0) {
-    return true;
-  }
+  if (!activeConfig || !activeConfig.allowedLevels || activeConfig.allowedLevels.length === 0) return true;
 
   const allowed = activeConfig.allowedLevels.map(l => String(l).trim().toUpperCase());
-
   let t = String(tingkatSiswa || "").trim().toUpperCase();
   const k = String(kelasSiswa || "").trim().toUpperCase();
 
@@ -1504,6 +1449,9 @@ function updateJurusanCount(kelasStr, tingkatStr) {
   }
 }
 
+/* ==========================================================================
+   7. REKAP KELAS & HALL OF FAME RENDER ENGINE
+   ========================================================================== */
 function renderJurusanUI() {
   const container = document.getElementById("kelasListContainer");
   if (!container) return;
@@ -1567,11 +1515,9 @@ function renderJurusanUI() {
     if (item.hadir === 0) return;
 
     const percent = item.total > 0 ? (item.hadir / item.total) * 100 : 0;
-    
     let groupKey = item.tingkat || "LAINNYA";
     
     const sampleStudent = Object.values(students).find(s => s && String(s.class || "").trim() === kName);
-    
     let namaLabBersih = sampleStudent 
       ? formatNamaKelas(String(sampleStudent.class || "").trim(), item.tingkat) 
       : formatNamaKelas(kName, item.tingkat);
@@ -1629,7 +1575,6 @@ function renderJurusanUI() {
     if (priorityOrder.includes(tKat) && !isLevelAllowed(tKat, "")) return;
 
     hasData = true;
-
     const isReguler = priorityOrder.includes(tKat);
     const titleHeader = isReguler ? `Rekap Kelas ${tKat}` : `Rekap ${tKat}`;
 
@@ -1734,23 +1679,6 @@ function applyRekapOverflowLayout(container = document.getElementById("kelasList
   });
 }
 
-if (!window.__rekapOverflowObserver && typeof ResizeObserver !== "undefined") {
-  const rekapContainer = document.getElementById("kelasListContainer");
-  if (rekapContainer) {
-    let rekapResizeQueued = false;
-    window.__rekapOverflowObserver = new ResizeObserver(() => {
-      if (rekapResizeQueued) return;
-      rekapResizeQueued = true;
-      requestAnimationFrame(() => {
-        rekapResizeQueued = false;
-        applyRekapOverflowLayout(rekapContainer);
-      });
-    });
-    window.__rekapOverflowObserver.observe(rekapContainer);
-  }
-}
-window.addEventListener("resize", () => applyRekapOverflowLayout());
-
 function normalisasiJurusanFrontend(jurusanStr) {
   if (!jurusanStr) return "LAINNYA";
   const j = String(jurusanStr).toUpperCase();
@@ -1766,6 +1694,226 @@ function normalisasiJurusanFrontend(jurusanStr) {
   return "LAINNYA";
 }
 
+function formatSmartName(fullName, maxLen = 22) {
+  if (!fullName) return "Siswa";
+  const cleanName = fullName.trim();
+  if (cleanName.length <= maxLen) return cleanName;
+  const parts = cleanName.split(" ");
+  if (parts.length > 2) {
+    const firstTwo = parts.slice(0, parts.length - 1).join(" ");
+    const lastInitial = parts[parts.length - 1].charAt(0).toUpperCase() + ".";
+    const result = `${firstTwo} ${lastInitial}`;
+    if (result.length <= maxLen + 3) return result;
+  }
+  if (parts.length >= 2) return `${parts[0]} ${parts[1].charAt(0).toUpperCase()}.`;
+  return cleanName;
+}
+
+let hofCarouselTimer = null;
+let hofCurrentTingkatIndex = 0;
+
+function getStudentTingkat(studentObj, kelasStr) {
+  if (studentObj && studentObj.tingkat) {
+    const tingkat = String(studentObj.tingkat).trim().toUpperCase();
+    if (["X", "XI", "XII"].includes(tingkat)) return tingkat;
+  }
+  const str = String(kelasStr || "").trim().toUpperCase();
+  const match = str.match(/(?:^|\s)(XII|XI|X)(?=\s|-|$)/);
+  if (match) return match[1];
+  return "LAINNYA";
+}
+
+function renderHallOfFameUI() {
+  const rank1Container = document.getElementById("hofRank1Container");
+  const listContainer = document.getElementById("hofListContainer");
+  const subLabelContainer = document.getElementById("hofSubLabelContainer");
+  if (!listContainer) return;
+
+  const hofCard = document.getElementById("hallOfFameCard");
+  const showHofIdle = (message = "Top 10 Kehadiran Siswa hari ini.") => {
+    if (hofCard) {
+      hofCard.classList.add("hof-idle-mode");
+      hofCard.classList.remove("hof-compact-mode");
+    }
+    if (rank1Container) rank1Container.innerHTML = "";
+    if (subLabelContainer) subLabelContainer.innerHTML = "";
+    listContainer.classList.remove("hof-fade-in");
+    listContainer.innerHTML = `
+      <div class="hof-idle-state">
+        <img src="assets/top10kelas.png" alt="Ilustrasi podium Top 10 Hall of Fame" />
+        <div class="hof-idle-copy">
+          <strong>Hall of Fame</strong>
+          <span>${message}</span>
+        </div>
+      </div>`;
+  };
+
+  if (typeof students === "undefined" || Object.keys(students).length === 0) {
+    showHofIdle("Menunggu data siswa dimuat.");
+    return;
+  }
+
+  try {
+    const allEarlyBirds = [];
+    const processedNis = new Set();
+
+    function parseTimeToMs(timeStr) {
+      if (!timeStr || timeStr === "--:--") return Infinity;
+      const parts = timeStr.split(":").map(Number);
+      return ((parts[0] || 0) * 3600 + (parts[1] || 0) * 60 + (parts[2] || 0)) * 1000;
+    }
+
+    if (window.serverEarlyBirds && Array.isArray(window.serverEarlyBirds)) {
+      window.serverEarlyBirds.forEach(item => {
+        const nisStr = typeof item === "object" ? String(item.nis || "") : String(item || "");
+        if (!nisStr || processedNis.has(nisStr)) return;
+        
+        const student = students[nisStr];
+        if (student && (student.jamMasukKhusus || student.jamPulangKhusus)) return;
+
+        processedNis.add(nisStr);
+        const timeDisplay = item && typeof item === "object" && item.time
+          ? item.time.split(":").map((part, i) => String(part || "0").padStart(2, "0")).slice(0, 3).join(":")
+          : "--:--:--";
+        const kelasVal = (student && (student.kelas || student.class)) || (item && item.kelas) || "";
+        allEarlyBirds.push({
+          nis: nisStr,
+          name: (student && student.name) || (item && item.name) || "Siswa",
+          kelas: kelasVal,
+          tingkat: getStudentTingkat(student, kelasVal),
+          timeStr: timeDisplay,
+          sortTime: parseTimeToMs(timeDisplay)
+        });
+      });
+    }
+
+    Object.keys(students).forEach(nis => {
+      const stringNis = String(nis);
+      if (!sudahHadirHariIni.has(stringNis) || processedNis.has(stringNis)) return;
+      
+      const student = students[stringNis];
+      if (student && (student.jamMasukKhusus || student.jamPulangKhusus)) return;
+
+      processedNis.add(stringNis);
+      const scanTimestamp = getStudentLastScanTimestamp(stringNis);
+      const scanDate = scanTimestamp > 0 ? new Date(scanTimestamp) : new Date();
+      const timeVal = `${String(scanDate.getHours()).padStart(2, "0")}:${String(scanDate.getMinutes()).padStart(2, "0")}:${String(scanDate.getSeconds()).padStart(2, "0")}`;
+      const kelasVal = student.class || student.kelas || "";
+      allEarlyBirds.push({
+        nis: stringNis, name: student.name || "Siswa", kelas: kelasVal,
+        tingkat: getStudentTingkat(student, kelasVal), timeStr: timeVal,
+        sortTime: scanDate.getTime()
+      });
+    });
+
+    const globalFilter = typeof currentFilterTingkat !== "undefined" ? currentFilterTingkat : "ALL";
+    const levelOrder = ["X", "XI", "XII", "LAINNYA"];
+    const levelsWithScans = levelOrder.filter(level => allEarlyBirds.some(student => student.tingkat === level));
+    let labelTingkatAktif = "";
+    let activeList = [];
+
+    if (globalFilter === "ALL" || globalFilter === "SEMUA") {
+      if (!levelsWithScans.length) {
+        showHofIdle();
+        return;
+      }
+      hofCurrentTingkatIndex = hofCurrentTingkatIndex % levelsWithScans.length;
+      labelTingkatAktif = levelsWithScans[hofCurrentTingkatIndex];
+      activeList = allEarlyBirds.filter(student => student.tingkat === labelTingkatAktif);
+    } else {
+      labelTingkatAktif = String(globalFilter).toUpperCase().replace("KELAS", "").trim();
+      activeList = allEarlyBirds.filter(student => student.tingkat === labelTingkatAktif);
+      if (!activeList.length) {
+        showHofIdle(`Belum ada siswa Kelas ${labelTingkatAktif} yang melakukan scan hari ini.`);
+        return;
+      }
+    }
+
+    if (hofCard) hofCard.classList.remove("hof-idle-mode");
+    activeList.sort((a, b) => a.sortTime - b.sortTime);
+    const now = new Date();
+    const formattedDate = now.toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+    if (subLabelContainer) {
+      subLabelContainer.innerHTML = `
+        <span class="hof-label-bold-black">Top 10 Kelas ${labelTingkatAktif}</span>
+        <span class="hof-label-gray-date">${formattedDate}</span>`;
+    }
+
+    const sortedTop10 = activeList.slice(0, 10);
+    if (hofCard) hofCard.classList.toggle("hof-compact-mode", sortedTop10.length <= 5);
+    if (!sortedTop10.length) {
+      showHofIdle();
+      return;
+    }
+
+    listContainer.classList.remove("hof-fade-in");
+    void listContainer.offsetWidth;
+    listContainer.classList.add("hof-fade-in");
+    listContainer.innerHTML = sortedTop10.map((item, idx) => {
+      const rankNum = idx + 1;
+      const nameFormat = formatSmartName(item.name, 24);
+      const kelasFormat = formatNamaKelas(item.kelas, item.tingkat);
+      return `
+        <div class="hof-item-clean" title="${item.name} (${kelasFormat}) - ${item.timeStr} WIB">
+          <span class="hof-num">${rankNum}.</span>
+          <span class="hof-name-bold">${nameFormat}</span>
+          <span class="hof-class-tag">${kelasFormat}</span>
+          <span class="hof-time-tag">${item.timeStr}</span>
+        </div>`;
+    }).join("");
+
+    const maxNameChars = Math.max(1, ...sortedTop10.map(item => formatSmartName(item.name, 24).length));
+    listContainer.style.setProperty("--hof-name-width", `min(${maxNameChars}ch, 45vw)`);
+  } catch (e) {
+    console.error("Gagal merender Hall of Fame:", e);
+    showHofIdle("Klasemen belum dapat ditampilkan.");
+  }
+}
+
+function startHofCarousel() {
+  if (hofCarouselTimer) {
+    clearInterval(hofCarouselTimer);
+    hofCarouselTimer = null;
+  }
+
+  hofCarouselTimer = setInterval(() => {
+    const globalFilter = typeof currentFilterTingkat !== "undefined" ? currentFilterTingkat : "ALL";
+    if (globalFilter === "ALL" || globalFilter === "SEMUA") {
+      const availableLevels = ["X", "XI", "XII", "LAINNYA"].filter(level =>
+        Array.isArray(window.serverEarlyBirds) && window.serverEarlyBirds.some(item => {
+          const nis = typeof item === "object" ? String(item.nis || "") : String(item || "");
+          const student = (typeof students !== "undefined" && students) ? students[nis] : null;
+          const kelas = (student && (student.class || student.kelas)) || (item && item.kelas) || "";
+          return getStudentTingkat(student, kelas) === level;
+        }) || (typeof students !== "undefined" && Object.keys(students).some(nis =>
+          sudahHadirHariIni.has(String(nis)) && getStudentTingkat(students[nis], students[nis].class || students[nis].kelas || "") === level
+        ))
+      );
+      if (availableLevels.length > 1) hofCurrentTingkatIndex = (hofCurrentTingkatIndex + 1) % availableLevels.length;
+      renderHallOfFameUI();
+    }
+  }, 8000);
+}
+
+function formatNamaKelas(idRombel, tingkat) {
+  if (!idRombel || typeof idRombel !== "string") return "-";
+
+  const parts = idRombel.trim().split("-");
+  const jurusan = parts[0] || "";
+  const subPart = parts[1] || "";
+  const subKelas = subPart.replace(/[0-9]/g, "").trim();
+  const tkt = String(tingkat || "").trim();
+
+  if (jurusan && tkt && subKelas) {
+    return `${jurusan.toUpperCase()} ${tkt.toUpperCase()}-${subKelas.toUpperCase()}`;
+  }
+
+  return idRombel;
+}
+
+/* ==========================================================================
+   8. UTILITIES, CLOCK, & TOAST SYSTEM
+   ========================================================================== */
 function getIndonesianDateString(dateObj = new Date()) {
   const hari = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
   const bulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
@@ -1854,21 +2002,6 @@ function flashError() {
   setTimeout(() => { document.body.classList.remove("flash-error"); }, 600);
 }
 
-setInterval(() => { 
-  if (!isSyncing && document.activeElement !== input && !document.getElementById("settingsModal").classList.contains("active")) {
-    input.focus(); 
-  }
-}, 1000);
-
-function updateConnectionStatus() {
-  updateOfflineBadge();
-  autoSyncIfOnline();
-}
-
-window.addEventListener("load", updateConnectionStatus);
-window.addEventListener("online", updateConnectionStatus);
-window.addEventListener("offline", updateConnectionStatus);
-
 function updateClock() {
   const now = new Date();
   const timeStr = now.toTimeString().split(' ')[0];
@@ -1881,12 +2014,6 @@ function updateClock() {
   if (now.getSeconds() === 0) loadLocalOverrideJam();
 }
 
-setInterval(updateClock, 1000);
-updateClock();
-
-/* ==========================================================
-   GLOBAL TOAST SYSTEM
-   ========================================================== */
 let appToastTimer = null;
 
 function showToast(message, type = "success", title = "") {
@@ -1937,10 +2064,6 @@ function hideToast() {
   if (toast) toast.classList.remove("is-visible");
 }
 
-function showToastJam(message, type) {
-  showToast(message, type);
-}
-
 function showCustomAlert(icon, message) {
   document.getElementById("alertIcon").innerText = icon;
   document.getElementById("alertMessage").innerText = message;
@@ -1949,7 +2072,7 @@ function showCustomAlert(icon, message) {
 
 function closeCustomAlert() {
   document.getElementById("customAlertModal").classList.remove("active");
-  setTimeout(() => { input.focus(); }, 200);
+  setTimeout(() => { if (input) input.focus(); }, 200);
 }
 
 function getLocalDateString(dateObj = new Date()) {
@@ -1970,9 +2093,41 @@ function getStudentLastScanTimestamp(nis) {
   return 0;
 }
 
-document.addEventListener("DOMContentLoaded", function() {
-  loadRekapEffectsPreference();
+function setAllProtections(enabled) {
+  if (window.settingsAccessRole !== "superadmin") return;
+  document.querySelectorAll('#tabContent-proteksi .protection-checkbox').forEach(function (checkbox) {
+    checkbox.checked = enabled;
+  });
+  updateProtectionStatusUI();
+}
 
+function updateProtectionStatusUI() {
+  const checkboxes = Array.from(document.querySelectorAll('#tabContent-proteksi .protection-checkbox'));
+  const btnOn = document.getElementById("protectionToggleOn");
+  const btnOff = document.getElementById("protectionToggleOff");
+
+  if (checkboxes.length === 0) return;
+
+  const activeCount = checkboxes.filter(checkbox => checkbox.checked).length;
+  const isAnyActive = activeCount > 0;
+
+  if (btnOn && btnOff) {
+    btnOn.classList.toggle("is-selected", isAnyActive);
+    btnOff.classList.toggle("is-selected", !isAnyActive);
+  }
+}
+
+/* ==========================================================================
+   9. INITIALIZATION LISTENERS & TIMERS
+   ========================================================================== */
+document.addEventListener("DOMContentLoaded", function() {
+  // Load Config & Student Data
+  loadSystemConfig();
+  loadStudents();
+  loadRekapEffectsPreference();
+  startHofCarousel();
+
+  // Change Listener Config Jam
   document.querySelectorAll("#tabContent-configJam input").forEach(inputEl => {
     inputEl.addEventListener("focus", () => {
       inputEl.dataset.initialValue = inputEl.value;
@@ -1997,276 +2152,14 @@ document.addEventListener("DOMContentLoaded", function() {
       }
     });
   });
-});
 
-function formatSmartName(fullName, maxLen = 22) {
-  if (!fullName) return "Siswa";
-  const cleanName = fullName.trim();
-  if (cleanName.length <= maxLen) return cleanName;
-  const parts = cleanName.split(" ");
-  if (parts.length > 2) {
-    const firstTwo = parts.slice(0, parts.length - 1).join(" ");
-    const lastInitial = parts[parts.length - 1].charAt(0).toUpperCase() + ".";
-    const result = `${firstTwo} ${lastInitial}`;
-    if (result.length <= maxLen + 3) return result;
-  }
-  if (parts.length >= 2) return `${parts[0]} ${parts[1].charAt(0).toUpperCase()}.`;
-  return cleanName;
-}
-
-let hofCarouselTimer = null;
-let hofCurrentTingkatIndex = 0;
-
-function getStudentTingkat(studentObj, kelasStr) {
-  if (studentObj && studentObj.tingkat) {
-    const tingkat = String(studentObj.tingkat).trim().toUpperCase();
-    if (["X", "XI", "XII"].includes(tingkat)) return tingkat;
-  }
-  const str = String(kelasStr || "").trim().toUpperCase();
-  const match = str.match(/(?:^|\s)(XII|XI|X)(?=\s|-|$)/);
-  if (match) return match[1];
-  return "LAINNYA";
-}
-
-function renderHallOfFameUI() {
-  const rank1Container = document.getElementById("hofRank1Container");
-  const listContainer = document.getElementById("hofListContainer");
-  const subLabelContainer = document.getElementById("hofSubLabelContainer");
-  if (!listContainer) return;
-
-  const hofCard = document.getElementById("hallOfFameCard");
-  const showHofIdle = (message = "Top 10 Kehadiran Siswa hari ini.") => {
-    if (hofCard) {
-      hofCard.classList.add("hof-idle-mode");
-      hofCard.classList.remove("hof-compact-mode");
-    }
-    if (rank1Container) rank1Container.innerHTML = "";
-    if (subLabelContainer) subLabelContainer.innerHTML = "";
-    listContainer.classList.remove("hof-fade-in");
-    listContainer.innerHTML = `
-      <div class="hof-idle-state">
-        <img src="assets/top10kelas.png" alt="Ilustrasi podium Top 10 Hall of Fame" />
-        <div class="hof-idle-copy">
-          <strong>Hall of Fame</strong>
-          <span>${message}</span>
-        </div>
-      </div>`;
-  };
-
-  if (typeof students === "undefined" || Object.keys(students).length === 0) {
-    showHofIdle("Menunggu data siswa dimuat.");
-    return;
-  }
-
-  try {
-    const allEarlyBirds = [];
-    const processedNis = new Set();
-
-    function parseTimeToMs(timeStr) {
-      if (!timeStr || timeStr === "--:--") return Infinity;
-      const parts = timeStr.split(":").map(Number);
-      return ((parts[0] || 0) * 3600 + (parts[1] || 0) * 60 + (parts[2] || 0)) * 1000;
-    }
-
-    // 1. FILTER SERVER EARLY BIRDS (Abaikan jika siswa Temporer)
-    if (window.serverEarlyBirds && Array.isArray(window.serverEarlyBirds)) {
-      window.serverEarlyBirds.forEach(item => {
-        const nisStr = typeof item === "object" ? String(item.nis || "") : String(item || "");
-        if (!nisStr || processedNis.has(nisStr)) return;
-        
-        const student = students[nisStr];
-        
-        // ABARKAN JIKA SISWA MEMILIKI JADWAL TEMPORER/KHUSUS
-        if (student && (student.jamMasukKhusus || student.jamPulangKhusus)) return;
-
-        processedNis.add(nisStr);
-        const timeDisplay = item && typeof item === "object" && item.time
-          ? item.time.split(":").map((part, i) => String(part || "0").padStart(2, "0")).slice(0, 3).join(":")
-          : "--:--:--";
-        const kelasVal = (student && (student.kelas || student.class)) || (item && item.kelas) || "";
-        allEarlyBirds.push({
-          nis: nisStr,
-          name: (student && student.name) || (item && item.name) || "Siswa",
-          kelas: kelasVal,
-          tingkat: getStudentTingkat(student, kelasVal),
-          timeStr: timeDisplay,
-          sortTime: parseTimeToMs(timeDisplay)
-        });
-      });
-    }
-
-    // 2. FILTER SISWA HADIR LOKAL (Abaikan jika siswa Temporer)
-    Object.keys(students).forEach(nis => {
-      const stringNis = String(nis);
-      if (!sudahHadirHariIni.has(stringNis) || processedNis.has(stringNis)) return;
-      
-      const student = students[stringNis];
-      
-      // ABAIKAN JIKA SISWA MEMILIKI JADWAL TEMPORER/KHUSUS
-      if (student && (student.jamMasukKhusus || student.jamPulangKhusus)) return;
-
-      processedNis.add(stringNis);
-      const scanTimestamp = getStudentLastScanTimestamp(stringNis);
-      const scanDate = scanTimestamp > 0 ? new Date(scanTimestamp) : new Date();
-      const timeVal = `${String(scanDate.getHours()).padStart(2, "0")}:${String(scanDate.getMinutes()).padStart(2, "0")}:${String(scanDate.getSeconds()).padStart(2, "0")}`;
-      const kelasVal = student.class || student.kelas || "";
-      allEarlyBirds.push({
-        nis: stringNis, name: student.name || "Siswa", kelas: kelasVal,
-        tingkat: getStudentTingkat(student, kelasVal), timeStr: timeVal,
-        sortTime: scanDate.getTime()
-      });
-    });
-
-    const globalFilter = typeof currentFilterTingkat !== "undefined" ? currentFilterTingkat : "ALL";
-    const levelOrder = ["X", "XI", "XII", "LAINNYA"];
-    const levelsWithScans = levelOrder.filter(level => allEarlyBirds.some(student => student.tingkat === level));
-    let labelTingkatAktif = "";
-    let activeList = [];
-
-    if (globalFilter === "ALL" || globalFilter === "SEMUA") {
-      if (!levelsWithScans.length) {
-        showHofIdle();
-        return;
-      }
-      hofCurrentTingkatIndex = hofCurrentTingkatIndex % levelsWithScans.length;
-      labelTingkatAktif = levelsWithScans[hofCurrentTingkatIndex];
-      activeList = allEarlyBirds.filter(student => student.tingkat === labelTingkatAktif);
-    } else {
-      labelTingkatAktif = String(globalFilter).toUpperCase().replace("KELAS", "").trim();
-      activeList = allEarlyBirds.filter(student => student.tingkat === labelTingkatAktif);
-      if (!activeList.length) {
-        showHofIdle(`Belum ada siswa Kelas ${labelTingkatAktif} yang melakukan scan hari ini.`);
-        return;
-      }
-    }
-
-    if (hofCard) hofCard.classList.remove("hof-idle-mode");
-    activeList.sort((a, b) => a.sortTime - b.sortTime);
-    const now = new Date();
-    const formattedDate = now.toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
-    if (subLabelContainer) {
-      subLabelContainer.innerHTML = `
-        <span class="hof-label-bold-black">Top 10 Kelas ${labelTingkatAktif}</span>
-        <span class="hof-label-gray-date">${formattedDate}</span>`;
-    }
-
-    const sortedTop10 = activeList.slice(0, 10);
-    if (hofCard) hofCard.classList.toggle("hof-compact-mode", sortedTop10.length <= 5);
-    if (!sortedTop10.length) {
-      showHofIdle();
-      return;
-    }
-
-    listContainer.classList.remove("hof-fade-in");
-    void listContainer.offsetWidth;
-    listContainer.classList.add("hof-fade-in");
-    listContainer.innerHTML = sortedTop10.map((item, idx) => {
-      const rankNum = idx + 1;
-      const nameFormat = formatSmartName(item.name, 24);
-      const kelasFormat = formatNamaKelas(item.kelas, item.tingkat);
-      return `
-        <div class="hof-item-clean" title="${item.name} (${kelasFormat}) - ${item.timeStr} WIB">
-          <span class="hof-num">${rankNum}.</span>
-          <span class="hof-name-bold">${nameFormat}</span>
-          <span class="hof-class-tag">${kelasFormat}</span>
-          <span class="hof-time-tag">${item.timeStr}</span>
-        </div>`;
-    }).join("");
-
-    const maxNameChars = Math.max(1, ...sortedTop10.map(item => formatSmartName(item.name, 24).length));
-    listContainer.style.setProperty("--hof-name-width", `min(${maxNameChars}ch, 45vw)`);
-  } catch (e) {
-    console.error("Gagal merender Hall of Fame:", e);
-    showHofIdle("Klasemen belum dapat ditampilkan.");
-  }
-}
-
-function startHofCarousel() {
-  if (hofCarouselTimer) {
-    clearInterval(hofCarouselTimer);
-    hofCarouselTimer = null;
-  }
-
-  hofCarouselTimer = setInterval(() => {
-    const globalFilter = typeof currentFilterTingkat !== "undefined" ? currentFilterTingkat : "ALL";
-    
-    if (globalFilter === "ALL" || globalFilter === "SEMUA") {
-      const availableLevels = ["X", "XI", "XII", "LAINNYA"].filter(level =>
-        Array.isArray(window.serverEarlyBirds) && window.serverEarlyBirds.some(item => {
-          const nis = typeof item === "object" ? String(item.nis || "") : String(item || "");
-          const student = (typeof students !== "undefined" && students) ? students[nis] : null;
-          const kelas = (student && (student.class || student.kelas)) || (item && item.kelas) || "";
-          return getStudentTingkat(student, kelas) === level;
-        }) || (typeof students !== "undefined" && Object.keys(students).some(nis =>
-          sudahHadirHariIni.has(String(nis)) && getStudentTingkat(students[nis], students[nis].class || students[nis].kelas || "") === level
-        ))
-      );
-      if (availableLevels.length > 1) hofCurrentTingkatIndex = (hofCurrentTingkatIndex + 1) % availableLevels.length;
-      renderHallOfFameUI();
-    }
-  }, 8000);
-}
-
-startHofCarousel();
-
-function formatNamaKelas(idRombel, tingkat) {
-  if (!idRombel || typeof idRombel !== "string") return "-";
-
-  const parts = idRombel.trim().split("-");
-  const jurusan = parts[0] || "";
-  const subPart = parts[1] || "";
-  const subKelas = subPart.replace(/[0-9]/g, "").trim();
-  const tkt = String(tingkat || "").trim();
-
-  if (jurusan && tkt && subKelas) {
-    return `${jurusan.toUpperCase()} ${tkt.toUpperCase()}-${subKelas.toUpperCase()}`;
-  }
-
-  return idRombel;
-}
-
-function setAllProtections(enabled) {
-  if (window.settingsAccessRole !== "superadmin") return;
+  // Protection Checkboxes Listener
   document.querySelectorAll('#tabContent-proteksi .protection-checkbox').forEach(function (checkbox) {
-    checkbox.checked = enabled;
+    checkbox.addEventListener('change', updateProtectionStatusUI);
   });
-  updateProtectionStatusUI();
-}
-
-function updateProtectionStatusUI() {
-  const checkboxes = Array.from(document.querySelectorAll('#tabContent-proteksi .protection-checkbox'));
-  const btnOn = document.getElementById("protectionToggleOn");
-  const btnOff = document.getElementById("protectionToggleOff");
-
-  if (checkboxes.length === 0) return;
-
-  const activeCount = checkboxes.filter(checkbox => checkbox.checked).length;
-  const isAnyActive = activeCount > 0;
-
-  if (btnOn && btnOff) {
-    if (isAnyActive) {
-      btnOn.classList.add("is-selected");
-      btnOff.classList.remove("is-selected");
-    } else {
-      btnOff.classList.add("is-selected");
-      btnOn.classList.remove("is-selected");
-    }
-  }
-}
-
-document.querySelectorAll('#tabContent-proteksi .protection-checkbox').forEach(function (checkbox) {
-  checkbox.addEventListener('change', updateProtectionStatusUI);
 });
 
-updateProtectionStatusUI();
-
-window.addEventListener("focus", updateConfigIndicators);
-document.addEventListener("visibilitychange", function() {
-  if (!document.hidden) updateConfigIndicators();
-});
-setInterval(updateConfigIndicators, 60000);
-
-// SINKRONISASI 1 SUMBER UTAMA SAAT APLIKASI PERTAMA DI-LOAD (GANTI HARI AUTO RESET TO DEFAULT)
+// Sync Status & Global Auto Protection Init
 (function initGlobalProtectionState() {
   try {
     const cached = JSON.parse(localStorage.getItem("scanner_protection_config") || "null");
@@ -2285,136 +2178,29 @@ setInterval(updateConfigIndicators, 60000);
   }
 })();
 
-function applyDominanGlow(imgElement) {
-  if (!imgElement || !imgElement.src) return;
+// Auto Refocus Scanner
+setInterval(() => { 
+  if (!isSyncing && input && document.activeElement !== input && !document.getElementById("settingsModal").classList.contains("active")) {
+    input.focus(); 
+  }
+}, 1000);
 
-  // 1. Buat elemen gambar sementara di memori JS
-  const tempImg = new Image();
-  tempImg.crossOrigin = "Anonymous"; // Izin membaca piksel lintas domain
-  tempImg.src = imgElement.src;
-
-  // 2. TUNGGU SAMPAI GAMBAR BENAR-BENAR SIAP 100%
-  tempImg.onload = function() {
-    try {
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-      canvas.width = 50;
-      canvas.height = 50;
-
-      // Gambar ke canvas setelah gambar siap
-      ctx.drawImage(tempImg, 0, 0, 50, 50);
-      const data = ctx.getImageData(0, 0, 50, 50).data;
-
-      let r = 0, g = 0, b = 0, count = 0;
-
-      for (let i = 0; i < data.length; i += 4) {
-        const alpha = data[i + 3];
-        const red = data[i];
-        const green = data[i + 1];
-        const blue = data[i + 2];
-
-        // Abaikan piksel transparan dan piksel yang terlalu putih polos (background)
-        if (alpha > 128 && !(red > 240 && green > 240 && blue > 240)) {
-          r += red;
-          g += green;
-          b += blue;
-          count++;
-        }
-      }
-
-      if (count > 0) {
-        const rgbStr = `${Math.round(r / count)}, ${Math.round(g / count)}, ${Math.round(b / count)}`;
-        imgElement.style.setProperty("--glow-rgb", rgbStr);
-      }
-    } catch (e) {
-      // Fallback warna biru netral (bukan burgundy) jika terhalang CORS
-      imgElement.style.setProperty("--glow-rgb", "37, 99, 235");
-    }
-  };
-
-  // Fallback jika gambar gagal dimuat
-  tempImg.onerror = function() {
-    imgElement.style.setProperty("--glow-rgb", "37, 99, 235");
-  };
+// Network Status Listeners
+function updateConnectionStatus() {
+  updateOfflineBadge();
+  autoSyncIfOnline();
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  const logoIdle = document.querySelector(".logo-idle-mode");
-  if (logoIdle) applyDominanGlow(logoIdle);
+window.addEventListener("load", updateConnectionStatus);
+window.addEventListener("online", updateConnectionStatus);
+window.addEventListener("offline", updateConnectionStatus);
+
+// Clock Timer
+setInterval(updateClock, 1000);
+updateClock();
+
+window.addEventListener("focus", updateConfigIndicators);
+document.addEventListener("visibilitychange", function() {
+  if (!document.hidden) updateConfigIndicators();
 });
-
-const THEME_STORAGE_KEY = "sisensi_active_theme";
-
-// 1. Inisialisasi Tema Saat Aplikasi Dimuat
-function initThemeEngine() {
-  const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
-  const globalTheme = (systemConfig && systemConfig.data) 
-    ? (systemConfig.data.tema_warna || systemConfig.data.TEMA_WARNA)
-    : (systemConfig.tema_warna || "burgundy");
-
-  const themeToApply = savedTheme || String(globalTheme).toLowerCase() || "burgundy";
-  selectTheme(themeToApply, false);
-}
-
-// 2. Toggle Buka/Tutup Popover Colors
-function toggleThemePopover(event) {
-  if (event) event.stopPropagation();
-  const popover = document.getElementById("themePopover");
-  if (popover) {
-    popover.classList.toggle("is-open");
-  }
-}
-
-// 3. Eksekusi Pilih Tema Real-time
-function selectTheme(themeName, isUserAction = true) {
-  const cleanTheme = String(themeName).toLowerCase();
-  
-  // Pasang Atribut data-theme ke Tag <body>
-  document.body.setAttribute("data-theme", cleanTheme);
-
-  // Update State Aktif pada Swatch Bulatan Modal
-  document.querySelectorAll(".color-swatch").forEach(swatch => {
-    swatch.classList.toggle("active", swatch.dataset.theme === cleanTheme);
-  });
-
-  // Re-calculate Glow Logo jika menggunakan variabel RGB
-  const logoIdle = document.querySelector(".logo-idle-mode");
-  if (logoIdle && typeof applyDominanGlow === "function") {
-    applyDominanGlow(logoIdle);
-  }
-
-  if (isUserAction) {
-    // Simpan ke Cache Lokal
-    try {
-      localStorage.setItem(THEME_STORAGE_KEY, cleanTheme);
-    } catch (e) {}
-
-    // Tutup Popover Melayang
-    const popover = document.getElementById("themePopover");
-    if (popover) popover.classList.remove("is-open");
-
-    // Kirim Sinkronisasi ke Backend Google Sheets (Optional)
-    if (window.settingsAdminToken) {
-      runGasApi("saveSystemTheme", { theme: cleanTheme, token: window.settingsAdminToken })
-        .catch(e => console.warn("Sync tema ke server gagal:", e));
-    }
-
-    showToast(`Tema visual diubah ke ${cleanTheme.toUpperCase()}!`, "info");
-  }
-}
-
-// 4. Close Popover Saat Klik Sembarang Tempat di Luar Modal
-document.addEventListener("click", function(e) {
-  const popover = document.getElementById("themePopover");
-  const btn = document.getElementById("themePickerBtn");
-  if (popover && popover.classList.contains("is-open")) {
-    if (!popover.contains(e.target) && !btn.contains(e.target)) {
-      popover.classList.remove("is-open");
-    }
-  }
-});
-
-// Panggil inisialisasi tema saat aplikasi siap
-document.addEventListener("DOMContentLoaded", function() {
-  initThemeEngine();
-});
+setInterval(updateConfigIndicators, 60000);
