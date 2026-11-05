@@ -542,7 +542,7 @@ input#nis:focus {
   display: block;
   margin: 0 auto 10px auto !important;
   transform: none !important;
-  --glow-rgb: 34, 197, 94; 
+  --glow-rgb: var(--theme-glow-rgb) !important; /* 👈 Diganti dari 34, 197, 94 ke variabel tema */
   animation: breathingLogoGlow 3.5s infinite ease-in-out;
 }
 
